@@ -10,6 +10,7 @@
   <link rel="preconnect" href="https://cdn.jsdelivr.net">
   <link rel="preconnect" href="https://tile.openstreetmap.org">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
   <link rel="stylesheet" href="assets/site.css">
   <link rel="stylesheet" href="assets/dashboard.css">
   <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
@@ -87,10 +88,11 @@
             </select>
           </div>
           <div class="filter-divider"></div>
-          <div class="layer-heading"><b>DISPLAY LAYERS</b><span>1 ACTIVE</span></div>
+          <div class="layer-heading"><b>DISPLAY LAYERS</b><span id="active-layer-count">1 ACTIVE</span></div>
           <label class="layer-option"><input id="boundary-toggle" type="checkbox" checked><span class="layer-check"></span><i class="swatch-boundary"></i><span class="layer-copy"><b>Reserve boundary</b><small>Source polygon</small></span><span class="layer-count">01</span></label>
+          <label class="layer-option"><input id="coverage-toggle" type="checkbox" checked><span class="layer-check"></span><i class="swatch-coverage"></i><span class="layer-copy"><b>Sentinel-2 coverage</b><small>Catalog footprint · not detections</small></span><span class="layer-count">06</span></label>
           <div class="layer-option layer-disabled"><input id="candidate-toggle" type="checkbox" disabled><span class="layer-check"></span><i class="swatch-candidate"></i><span class="layer-copy"><b>Mining candidates</b><small>Not computed</small></span><span class="layer-count">—</span></div>
-          <div class="layer-option layer-disabled"><input type="checkbox" disabled><span class="layer-check"></span><i class="swatch-change"></i><span class="layer-copy"><b>Change raster</b><small>NoData placeholder</small></span><span class="layer-count">—</span></div>
+          <div class="map-legend-note"><i></i><span>Shaded cells show where Sentinel-2 scenes intersect the reserve. Select a cell for catalog details.</span></div>
           <div class="filter-divider"></div>
           <div class="map-status-card"><span class="status-symbol">!</span><p><b>Candidate filters inactive</b><br>No full-area site inventory has been produced.</p></div>
           <div class="panel-foot"><span>DATA THROUGH</span><b>31 OCT 2026</b><a href="methodology.html">View methodology <span>→</span></a></div>

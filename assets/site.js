@@ -41,6 +41,10 @@
     const mapPeriodLabel = document.getElementById("map-period-label");
     const engineState = document.getElementById("map-engine-state");
     const basemapSelect = document.getElementById("basemap-select");
+    const coverageToggle = document.getElementById("coverage-toggle");
+    const activeLayerCount = document.getElementById("active-layer-count");
+    let selectedYear = yearFilter?.value || "all";
+    let selectedPeriod = periodFilter?.value || "all";
     if (!window.L) {
       try {
         await loadLeafletFallback();
@@ -106,6 +110,7 @@
     });
 
     let boundaryLayer = null;
+    let coverageLayer = null;
     let boundaryBounds = null;
     try {
       const response = await fetch(assetUrl("RFO.json"));
@@ -120,11 +125,81 @@
       boundaryBounds = boundaryLayer.getBounds();
       if (!boundaryBounds.isValid()) throw new Error("Boundary GeoJSON contains no mappable coordinates");
       map.fitBounds(boundaryBounds, { padding: [30, 30], maxZoom: 10 });
-      updateEngineState("BOUNDARY LOADED");
     } catch (error) {
       console.error("Could not load the RFO boundary:", error);
       updateEngineState("BOUNDARY UNAVAILABLE");
+      if (caption) caption.textContent = "The reserve boundary could not be loaded. Download the source GeoJSON from Data & downloads.";
       if (boundaryLayer) map.removeLayer(boundaryLayer);
+    }
+
+    try {
+      const response = await fetch(assetUrl("RFO_Mining_Analysis_2026/gis/coverage.geojson"));
+      if (!response.ok) throw new Error(`Catalog coverage request returned ${response.status}`);
+      const coverage = await response.json();
+      coverageLayer = L.geoJSON(coverage, {
+        style: (feature) => coverageStyle(feature),
+        onEachFeature: (feature, layer) => {
+          layer.bindPopup(() => coveragePopup(feature.properties));
+          layer.on("mouseover", () => layer.setStyle({ weight: 2.4, fillOpacity: 0.48 }));
+          layer.on("mouseout", () => coverageLayer?.resetStyle(layer));
+        }
+      });
+      if (coverageToggle?.checked !== false) coverageLayer.addTo(map);
+      if (boundaryLayer && map.hasLayer(boundaryLayer)) boundaryLayer.bringToFront();
+      updateEngineState("BOUNDARY + CATALOG DATA");
+    } catch (error) {
+      console.error("Could not load clipped Sentinel-2 catalog footprints:", error);
+      updateEngineState(boundaryBounds ? "BOUNDARY ONLY · DATA UNAVAILABLE" : "MAP DATA UNAVAILABLE");
+      if (caption) caption.textContent = "The reserve boundary is shown, but the Sentinel-2 coverage layer could not be loaded. No mining detections are available.";
+    }
+
+    function coverageStyle(feature) {
+      const matching = feature?.properties?.periods?.filter((record) =>
+        (selectedYear === "all" || String(record.year) === selectedYear) &&
+        (selectedPeriod === "all" || record.period === selectedPeriod)
+      ) || [];
+      const count = matching.reduce((total, record) => total + record.count, 0);
+      return {
+        color: "#326f67",
+        weight: 1.15,
+        opacity: count ? 0.9 : 0,
+        fillColor: "#6da99e",
+        fillOpacity: count ? 0.34 : 0
+      };
+    }
+
+    function coveragePopup(properties) {
+      const records = properties.periods.filter((record) =>
+        (selectedYear === "all" || String(record.year) === selectedYear) &&
+        (selectedPeriod === "all" || record.period === selectedPeriod)
+      );
+      const count = records.reduce((total, record) => total + record.count, 0);
+      const selected = records.reduce((total, record) => total + record.selected, 0);
+      const dates = records.flatMap((record) => [record.first_date, record.last_date]).sort();
+      const periodName = selectedPeriod === "all" ? "all periods" : selectedPeriod;
+      const yearName = selectedYear === "all" ? "2025–2026" : selectedYear;
+      const sourceRecord = records.at(-1);
+      const sourceLabel = sourceRecord ? `${sourceRecord.year} ${sourceRecord.period}` : "catalog";
+      return `<b>Sentinel-2 tile ${escapeHtml(properties.tile)}</b><br>${count} catalog scenes · ${selected} priority-selected<br>${escapeHtml(yearName)} · ${escapeHtml(periodName)}${dates.length ? `<br>Catalog dates: ${escapeHtml(dates[0])} to ${escapeHtml(dates.at(-1))}` : ""}<br><i>Imagery coverage only—not a mining detection.</i>${sourceRecord ? `<br><a href="${escapeHtml(sourceRecord.source_item)}" target="_blank" rel="noopener">Open representative ${escapeHtml(sourceLabel)} STAC scene ↗</a>` : ""}`;
+    }
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, (character) => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      })[character]);
+    }
+
+    function updateActiveLayerCount() {
+      if (!activeLayerCount) return;
+      const count = Number(Boolean(boundaryLayer && map.hasLayer(boundaryLayer))) +
+        Number(Boolean(coverageLayer && map.hasLayer(coverageLayer)));
+      activeLayerCount.textContent = `${count} ACTIVE`;
+    }
+
+    function updateCoverageStyles() {
+      coverageLayer?.eachLayer((layer) => {
+        if (layer.feature) layer.setStyle(coverageStyle(layer.feature));
+      });
     }
 
     document.getElementById("zoom-to-boundary")?.addEventListener("click", () => {
@@ -134,7 +209,17 @@
       if (!boundaryLayer) return;
       if (event.currentTarget.checked) boundaryLayer.addTo(map);
       else map.removeLayer(boundaryLayer);
+      if (event.currentTarget.checked) boundaryLayer.bringToFront();
+      updateActiveLayerCount();
     });
+    coverageToggle?.addEventListener("change", (event) => {
+      if (!coverageLayer) return;
+      if (event.currentTarget.checked) coverageLayer.addTo(map);
+      else map.removeLayer(coverageLayer);
+      if (boundaryLayer && map.hasLayer(boundaryLayer)) boundaryLayer.bringToFront();
+      updateActiveLayerCount();
+    });
+    updateActiveLayerCount();
 
     map.on("mousemove", (event) => {
       const coordinates = document.getElementById("map-coordinates");
@@ -158,6 +243,8 @@
     const updatePeriod = () => {
       const period = periodFilter?.value || "all";
       const year = yearFilter?.value || "all";
+      selectedYear = year;
+      selectedPeriod = period;
       const records = sceneData.filter((row) =>
         (period === "all" || row.quarter === period) &&
         (year === "all" || String(row.year) === year)
@@ -165,12 +252,11 @@
       const catalogTotal = records.reduce((sum, row) => sum + row.catalogRecords, 0);
       const chosenPeriod = period === "all" ? "ALL PERIODS" : period;
       const chosenYear = year === "all" ? "2025 + 2026" : year;
-      if (mapPeriodLabel) mapPeriodLabel.textContent = `${chosenYear} · ${chosenPeriod} · ${catalogTotal} CATALOG RECORDS`;
+      if (mapPeriodLabel) mapPeriodLabel.textContent = `${chosenYear} · ${chosenPeriod} · ${catalogTotal.toLocaleString()} CATALOG RECORDS`;
       if (caption) {
-        caption.textContent = period === "all" && year === "all"
-          ? "Boundary shown. No mining detections are available from this incomplete assessment."
-          : `${chosenYear} / ${chosenPeriod}: ${catalogTotal} Sentinel-2 records matched. This is imagery availability—not mining detections.`;
+        caption.textContent = `${catalogTotal.toLocaleString()} Sentinel-2 catalog records across six reserve-intersecting tile footprints. Imagery coverage only—not mining detections. The reserve-wide assessment is incomplete.`;
       }
+      updateCoverageStyles();
       if (sceneChart) {
         const periods = ["Q1", "Q2", "Q3", "Q4"];
         sceneChart.data.datasets[0].data = periods.map((q) =>
