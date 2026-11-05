@@ -146,6 +146,7 @@
     const basemapSelect = document.getElementById("basemap-select");
     const coverageToggle = document.getElementById("coverage-toggle");
     const activeLayerCount = document.getElementById("active-layer-count");
+    const retryButton = document.getElementById("map-retry");
     let selectedYear = yearFilter?.value || "all";
     let selectedPeriod = periodFilter?.value || "all";
     if (!window.L) {
@@ -176,8 +177,39 @@
     let tileErrors = 0;
     let tileLoads = 0;
     let switchedToFallback = false;
+    let catalogLayerReady = false;
+    let fallbackTimer = null;
+    const clearFallbackTimer = () => {
+      if (fallbackTimer !== null) window.clearTimeout(fallbackTimer);
+      fallbackTimer = null;
+    };
     const updateEngineState = (message) => {
       if (engineState) engineState.textContent = message;
+    };
+    const reportMapState = () => {
+      if (tileLoads > 0) {
+        updateEngineState(catalogLayerReady ? "BASEMAP + CATALOG READY" : "BASEMAP READY");
+      } else if (activeBasemap === basemaps.osm && tileErrors >= 3) {
+        updateEngineState("MAP TILES UNAVAILABLE");
+        if (retryButton) retryButton.hidden = false;
+      } else {
+        updateEngineState(catalogLayerReady ? "BOUNDARY + CATALOG · LOADING TILES" : "LOADING BASEMAP");
+      }
+    };
+    const startFallbackTimer = () => {
+      clearFallbackTimer();
+      fallbackTimer = window.setTimeout(() => {
+        fallbackTimer = null;
+        if (tileLoads > 0) return;
+        if (activeBasemap !== basemaps.osm && !switchedToFallback) {
+          switchedToFallback = true;
+          if (basemapSelect) basemapSelect.value = "osm";
+          activateBasemap("osm");
+        } else {
+          tileErrors = Math.max(tileErrors, 3);
+          reportMapState();
+        }
+      }, 5000);
     };
     const activateBasemap = (name) => {
       if (!basemaps[name] || activeBasemap === basemaps[name]) return;
@@ -185,14 +217,18 @@
       activeBasemap = basemaps[name];
       tileErrors = 0;
       tileLoads = 0;
+      if (retryButton) retryButton.hidden = true;
       activeBasemap.addTo(map);
-      updateEngineState("LOADING BASEMAP");
+      reportMapState();
+      startFallbackTimer();
     };
     for (const [name, layer] of Object.entries(basemaps)) {
       layer.on("tileload", () => {
         if (activeBasemap !== layer) return;
         tileLoads += 1;
-        updateEngineState("BASEMAP READY");
+        clearFallbackTimer();
+        if (retryButton) retryButton.hidden = true;
+        reportMapState();
       });
       layer.on("tileerror", () => {
         if (activeBasemap !== layer) return;
@@ -202,14 +238,32 @@
           if (basemapSelect) basemapSelect.value = "osm";
           activateBasemap("osm");
         } else if (name === "osm" && tileErrors >= 3 && tileLoads === 0) {
-          updateEngineState("BASEMAP UNAVAILABLE");
+          reportMapState();
         }
       });
     }
     activeBasemap.addTo(map);
+    startFallbackTimer();
     basemapSelect?.addEventListener("change", () => {
       switchedToFallback = basemapSelect.value === "osm";
       activateBasemap(basemapSelect.value);
+    });
+    retryButton?.addEventListener("click", () => {
+      switchedToFallback = false;
+      const currentName = Object.entries(basemaps).find(([, layer]) => layer === activeBasemap)?.[0];
+      const nextName = currentName === "osm" ? "carto" : "osm";
+      if (basemapSelect) basemapSelect.value = nextName;
+      if (activeBasemap === basemaps[nextName]) {
+        map.removeLayer(activeBasemap);
+        tileErrors = 0;
+        tileLoads = 0;
+        if (retryButton) retryButton.hidden = true;
+        activeBasemap.addTo(map);
+        reportMapState();
+        startFallbackTimer();
+      } else {
+        activateBasemap(nextName);
+      }
     });
 
     let boundaryLayer = null;
@@ -248,10 +302,12 @@
       if (coverageToggle?.checked !== false) coverageLayer.addTo(map);
       if (boundaryLayer && map.hasLayer(boundaryLayer)) boundaryLayer.bringToFront();
       sceneData = aggregateCoverage(coverage.features);
-      updateEngineState("BOUNDARY + CATALOG DATA");
+      catalogLayerReady = true;
+      reportMapState();
     } catch (error) {
       console.error("Could not load clipped Sentinel-2 catalog footprints:", error);
-      updateEngineState(boundaryBounds ? "BOUNDARY ONLY · DATA UNAVAILABLE" : "MAP DATA UNAVAILABLE");
+      catalogLayerReady = false;
+      reportMapState();
       if (caption) caption.textContent = "The reserve boundary is shown, but the Sentinel-2 coverage layer could not be loaded. No mining detections are available.";
     }
 
