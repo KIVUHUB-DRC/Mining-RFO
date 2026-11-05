@@ -4,107 +4,116 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#102a23">
-  <meta name="description" content="Satellite-monitoring dashboard for the Okapi Wildlife Reserve, DRC. This 2026 assessment is incomplete; no mining detections are verified.">
-  <title>RFO Watch — Okapi Wildlife Reserve</title>
+  <meta name="description" content="Interactive satellite-screening dashboard for the Okapi Wildlife Reserve, DRC. This 2026 assessment is incomplete; no mining detections are verified.">
+  <title>RFO Watch — Forest Monitor</title>
   <link rel="preconnect" href="https://unpkg.com">
   <link rel="preconnect" href="https://tile.openstreetmap.org">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
   <link rel="stylesheet" href="assets/site.css">
+  <link rel="stylesheet" href="assets/dashboard.css">
   <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
   <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
   <script defer src="assets/site.js"></script>
 </head>
-<body data-page="home">
+<body data-page="home" class="dashboard-page">
   <a class="skip-link" href="#main">Skip to content</a>
-  <header class="site-header">
+  <header class="site-header dashboard-header">
     <a class="brand" href="index.html" aria-label="RFO Watch home">
       <span class="brand-mark" aria-hidden="true">R</span>
-      <span class="brand-copy"><strong>RFO<span>WATCH</span></strong><small>OKAPI WILDLIFE RESERVE</small></span>
+      <span class="brand-copy"><strong>RFO<span>WATCH</span></strong><small>FOREST MONITOR · DRC</small></span>
     </a>
+    <div class="header-location"><span class="location-pip"></span><span>ITURI PROVINCE</span><i></i><span>DEMOCRATIC REPUBLIC OF THE CONGO</span></div>
     <button class="menu-toggle" aria-expanded="false" aria-controls="primary-nav" aria-label="Open navigation"><span></span><span></span></button>
     <nav class="primary-nav" id="primary-nav" aria-label="Main navigation">
-      <a class="active" href="index.html">Overview</a>
+      <a class="active" href="index.html">Monitor</a>
       <a href="methodology.html">Methodology</a>
-      <a href="downloads.html">Data &amp; downloads</a>
-      <a class="nav-cta" href="#live-map">Explore map <span aria-hidden="true">↗</span></a>
+      <a href="downloads.html">Data library</a>
+      <a class="nav-cta" href="downloads.html">Get the data <span aria-hidden="true">↗</span></a>
     </nav>
   </header>
 
   <main id="main">
-    <section class="hero">
-      <div class="hero-text">
-        <div class="eyebrow"><span class="live-dot"></span> CONSERVATION MONITORING · DRC</div>
-        <h1>A closer watch<br>over <em>Okapi habitat.</em></h1>
-        <p>A satellite-based screening workspace for the Okapi Wildlife Reserve. Explore the reserve boundary, review the imagery catalog, and see exactly what this assessment can—and cannot—say.</p>
-        <div class="hero-actions"><a class="button button-light" href="#live-map">Explore the map <span aria-hidden="true">↓</span></a><a class="text-link" href="methodology.html">How the analysis works <span aria-hidden="true">→</span></a></div>
-        <div class="hero-footnote"><span class="mini-shield" aria-hidden="true">!</span> 2026 assessment is incomplete. No mining sites are confirmed.</div>
+    <section class="dashboard-intro">
+      <div>
+        <div class="eyebrow eyebrow-dark"><span class="intro-pip"></span> PROTECTED AREA MONITORING</div>
+        <h1>Okapi Wildlife Reserve <span>Forest Monitor</span></h1>
+        <p>Satellite imagery catalog and reserve boundary · Analysis window: <b>Jan–Oct 2026</b> · Compared with seasonal 2025 baseline</p>
       </div>
-      <div class="hero-visual" aria-hidden="true">
-        <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div>
-        <div class="hero-orb"><span class="orb-core"></span><span class="orb-label">ITURI<br>FOREST</span></div>
-        <div class="visual-chip chip-top"><span class="chip-dot"></span> SATELLITE SCREENING <b>2026</b></div>
-        <div class="visual-chip chip-bottom"><span>01</span> RESERVE BOUNDARY <i>WGS 84</i></div>
-        <span class="visual-coordinate">1°43′N &nbsp; 28°32′E</span>
-      </div>
+      <div class="intro-date"><span>ASSESSMENT STATUS</span><b><i></i> INCOMPLETE</b><a href="methodology.html#limitations">Why this matters <span>↗</span></a></div>
     </section>
 
-    <section class="status-banner" role="status" aria-label="Assessment status">
-      <div class="status-icon" aria-hidden="true">!</div>
-      <div><strong>Screening incomplete — no reserve-wide finding is available</strong><p>The raster analysis stopped before covering the full reserve. Empty site layers and NoData rasters are placeholders—not evidence of zero mining.</p></div>
-      <a href="methodology.html#limitations">Read the limitations <span aria-hidden="true">→</span></a>
+    <section class="dashboard-status" role="status" aria-label="Analysis status">
+      <span class="status-symbol">!</span>
+      <div><strong>No reserve-wide detection result is available</strong><p>Processing stopped before all reserve tiles and periods completed. Empty site data and NoData rasters are placeholders—not a finding of zero mining.</p></div>
+      <a href="methodology.html">Assessment notes <span>→</span></a>
     </section>
 
-    <section class="metrics section-wrap" aria-label="Assessment snapshot">
-      <div class="metric"><span class="metric-icon">⌖</span><div><strong>1.394<span>M</span></strong><small>HECTARES IN RESERVE</small></div><i>Source polygon</i></div>
-      <div class="metric"><span class="metric-icon">◷</span><div><strong>1,316</strong><small>CATALOG SCENE RECORDS</small></div><i>2025 baseline + 2026</i></div>
-      <div class="metric"><span class="metric-icon">◎</span><div><strong>96</strong><small>PRIORITY SCENES SELECTED</small></div><i>Not all were processed</i></div>
-      <div class="metric metric-alert"><span class="metric-icon">!</span><div><strong>—</strong><small>VERIFIED MINING SITES</small></div><i>Assessment incomplete</i></div>
-    </section>
-
-    <section class="map-section section-wrap" id="live-map">
-      <div class="section-heading">
-        <div><div class="eyebrow eyebrow-dark">INTERACTIVE GEOGRAPHIC VIEW</div><h2>Explore the reserve</h2><p>Inspect the authoritative boundary. Mining-candidate overlays are unavailable because full-area processing did not finish.</p></div>
-        <a class="quiet-link" href="downloads.html">Download spatial data <span aria-hidden="true">↗</span></a>
+    <section class="dashboard-map-section" id="live-map">
+      <div class="dashboard-heading">
+        <div><span class="heading-kicker">LIVE GEOGRAPHIC VIEW</span><h2>Reserve overview <span class="heading-coordinate">1.72° N / 28.53° E</span></h2></div>
+        <div class="map-heading-right"><span class="map-data-state"><i></i> BOUNDARY AVAILABLE · DETECTIONS UNAVAILABLE</span><a href="downloads.html">Spatial files <span>↗</span></a></div>
       </div>
-      <div class="map-shell">
-        <aside class="map-controls">
-          <div class="control-head"><span class="control-symbol">⌖</span><div><strong>Map layers</strong><small>2026 ANALYSIS</small></div></div>
-          <label class="field-label" for="period-filter">Observation period</label>
-          <select id="period-filter">
-            <option value="all">All periods</option><option value="Q1">Q1 · Jan–Mar</option><option value="Q2">Q2 · Apr–Jun</option><option value="Q3">Q3 · Jul–Aug</option><option value="Q4">Q4 · Sep–Oct</option>
-          </select>
-          <label class="field-label" for="confidence-filter">Confidence</label>
-          <select id="confidence-filter" disabled aria-describedby="filter-note">
-            <option>Unavailable · no candidate inventory</option>
-          </select>
-          <div class="layer-row"><span><i class="legend-boundary"></i> Reserve boundary</span><span class="layer-on">ON</span></div>
-          <div class="layer-row layer-muted"><span><i class="legend-sites"></i> Potential mining sites</span><span class="layer-off">NOT COMPUTED</span></div>
-          <div class="layer-row layer-muted"><span><i class="legend-alert"></i> Disturbance raster</span><span class="layer-off">NO DATA</span></div>
-          <p class="filter-note" id="filter-note">Period filters describe the imagery catalog only. They cannot filter mining detections.</p>
-          <div class="map-legend"><strong>BOUNDARY KEY</strong><span><i class="legend-boundary"></i> RFO outline</span><span><i class="legend-halo"></i> Reserve interior</span></div>
-          <a class="method-mini" href="methodology.html">View screening method <span>→</span></a>
+
+      <div class="dashboard-map-grid">
+        <aside class="filter-panel" aria-label="Map controls and filters">
+          <div class="filter-panel-top"><span class="filter-panel-icon">⌖</span><div><b>Map controls</b><small>RFO · EPSG:4326</small></div><span class="control-dots" aria-hidden="true">···</span></div>
+          <div class="filter-block">
+            <label for="period-filter">OBSERVATION PERIOD</label>
+            <select id="period-filter">
+              <option value="all">All catalog periods</option>
+              <option value="Q1">Q1 · January–March</option>
+              <option value="Q2">Q2 · April–June</option>
+              <option value="Q3">Q3 · July–August</option>
+              <option value="Q4">Q4 · September–October</option>
+            </select>
+            <small class="filter-help">Filters catalog summary only, not mining detections.</small>
+          </div>
+          <div class="filter-block">
+            <label for="year-filter">CATALOG YEAR</label>
+            <select id="year-filter">
+              <option value="all">2025 baseline + 2026</option>
+              <option value="2025">2025 baseline</option>
+              <option value="2026">2026 analysis period</option>
+            </select>
+          </div>
+          <div class="filter-divider"></div>
+          <div class="layer-heading"><b>DISPLAY LAYERS</b><span>1 ACTIVE</span></div>
+          <label class="layer-option"><input id="boundary-toggle" type="checkbox" checked><span class="layer-check"></span><i class="swatch-boundary"></i><span class="layer-copy"><b>Reserve boundary</b><small>Source polygon</small></span><span class="layer-count">01</span></label>
+          <div class="layer-option layer-disabled"><input id="candidate-toggle" type="checkbox" disabled><span class="layer-check"></span><i class="swatch-candidate"></i><span class="layer-copy"><b>Mining candidates</b><small>Not computed</small></span><span class="layer-count">—</span></div>
+          <div class="layer-option layer-disabled"><input type="checkbox" disabled><span class="layer-check"></span><i class="swatch-change"></i><span class="layer-copy"><b>Change raster</b><small>NoData placeholder</small></span><span class="layer-count">—</span></div>
+          <div class="filter-divider"></div>
+          <div class="map-status-card"><span class="status-symbol">!</span><p><b>Candidate filters inactive</b><br>No full-area site inventory has been produced.</p></div>
+          <div class="panel-foot"><span>DATA THROUGH</span><b>31 OCT 2026</b><a href="methodology.html">View methodology <span>→</span></a></div>
         </aside>
-        <div class="map-wrap"><div id="rfo-map" aria-label="Interactive Leaflet map of the Okapi Wildlife Reserve boundary"></div><div class="map-overlay"><span class="overlay-dot"></span><span id="map-period-label">BOUNDARY VIEW · ALL PERIODS</span></div><div class="map-scale-note">Reserve boundary · EPSG:4326</div></div>
+
+        <div class="dashboard-map-wrap">
+          <div id="rfo-map" aria-label="Interactive Leaflet map of the Okapi Wildlife Reserve boundary"></div>
+          <div class="map-floating-title"><i></i><b>OKAPI WILDLIFE RESERVE</b><span>ITURI · DRC</span></div>
+          <div class="map-floating-status"><span>SCREENING STATUS</span><b><i></i> INCOMPLETE</b></div>
+          <div class="map-coordinates" id="map-coordinates">Move over map for coordinates</div>
+          <div class="map-disclaimer"><b>!</b><span id="map-caption-text">Boundary shown. No mining detections are available from this incomplete assessment.</span></div>
+          <div class="map-bottom-info"><span id="map-period-label">ALL CATALOG PERIODS</span><i></i><span>SCENE COUNTS ARE NOT SITE COUNTS</span></div>
+        </div>
       </div>
-      <p class="map-caption"><span class="map-caption-icon">i</span><span id="map-caption">The map displays the supplied RFO boundary only. No site locations are shown because a complete, verified detection layer is unavailable.</span></p>
+      <div class="map-footline"><span>BOUNDARY SOURCE <b>RFO.json</b></span><span>AREA <b>1,393,822 ha</b></span><span>AREA CRS <b>UTM 35N · EPSG:32635</b></span><span class="map-footline-right">BASEMAP © OPENSTREETMAP · CARTO</span></div>
     </section>
 
-    <section class="insights section-wrap">
-      <div class="section-heading">
-        <div><div class="eyebrow eyebrow-dark">WHAT THE CATALOG TELLS US</div><h2>Imagery coverage, not mine counts</h2><p>These charts summarize Sentinel-2 catalog records returned by season. Scene counts are not disturbance detections and not all returned scenes were processed.</p></div>
-        <span class="data-tag"><span class="live-dot"></span> SOURCE: STAC SCENE REGISTER</span>
-      </div>
-      <div class="charts-grid">
-        <article class="chart-card chart-wide"><div class="chart-title"><div><span class="chart-index">01</span><h3>Scenes available by period</h3></div><span class="chart-unit">SCENE RECORDS</span></div><div class="chart-canvas"><canvas id="scene-chart" role="img" aria-label="Bar chart showing Sentinel-2 scene catalog records by quarter for 2025 and 2026"></canvas></div><div class="chart-legend"><span><i class="dot-2025"></i>2025 baseline</span><span><i class="dot-2026"></i>2026 analysis</span><small>Catalog results intersecting the reserve boundary</small></div></article>
-        <article class="chart-card"><div class="chart-title"><div><span class="chart-index">02</span><h3>Catalog triage</h3></div><span class="chart-unit">SCENE RECORDS</span></div><div class="donut-wrap"><canvas id="triage-chart" role="img" aria-label="Doughnut chart showing priority-selected and remaining catalog scene records"></canvas><div class="donut-center"><strong>1,316</strong><span>CATALOG RECORDS</span></div></div><div class="triage-key"><span><i class="dot-selected"></i><b>96</b> priority-selected</span><span><i class="dot-remaining"></i><b>1,220</b> other catalog records</span></div><p class="small-caveat">Selected for the attempted screening workflow; selection does not mean imagery was processed.</p></article>
-      </div>
-      <div class="insight-note"><span>↗</span><p><strong>Reading these charts:</strong> The catalog contains acquisitions matching the reserve geometry and time ranges. Cloud cover, scene overlap, and incomplete processing affect usability. <a href="methodology.html">See the full process and limitations →</a></p></div>
+    <section class="dashboard-metrics" aria-label="Assessment indicators">
+      <article class="dash-metric"><span class="dash-metric-label">RESERVE AREA <i>ⓘ</i></span><b>1.394<span> M ha</span></b><small>Projected from source polygon</small></article>
+      <article class="dash-metric"><span class="dash-metric-label">SCENE RECORDS <i>ⓘ</i></span><b>1,316</b><small>2025 baseline + 2026 catalog</small></article>
+      <article class="dash-metric"><span class="dash-metric-label">PRIORITY SELECTED <i>ⓘ</i></span><b>96</b><small>Selection ≠ processed imagery</small></article>
+      <article class="dash-metric dash-metric-warning"><span class="dash-metric-label">CONFIRMED SITES <i>ⓘ</i></span><b>NOT <span>ASSESSED</span></b><small>Do not interpret as zero</small></article>
     </section>
 
-    <section class="next-steps">
-      <div class="next-inner"><div><div class="eyebrow">TRANSPARENT BY DESIGN</div><h2>Know what was measured.<br>Know what still needs work.</h2><p>Explore the screening thresholds, processing status, data sources and recommended validation steps.</p></div><div class="next-actions"><a class="button button-gold" href="methodology.html">Read methodology <span aria-hidden="true">→</span></a><a class="button button-outline" href="downloads.html">Browse downloads <span aria-hidden="true">↓</span></a></div></div>
+    <section class="dashboard-analytics">
+      <div class="analytics-heading"><div><span class="heading-kicker">DATA COVERAGE</span><h2>What went into the screen</h2><p>Catalog activity is summarized separately from incomplete image processing. Neither chart represents mining activity.</p></div><a href="methodology.html">How to read these charts <span>↗</span></a></div>
+      <div class="analytics-grid">
+        <article class="analytics-card"><div class="analytics-card-head"><div><span class="chart-badge">01</span><div><h3>Catalog scenes by period</h3><p>Boundary-intersecting Sentinel-2 records</p></div></div><span class="analytics-unit">SCENES</span></div><div class="chart-canvas"><canvas id="scene-chart" role="img" aria-label="Bar chart showing Sentinel-2 catalog records by quarter for 2025 and 2026"></canvas></div><div class="chart-legend"><span><i class="dot-2025"></i>2025 baseline</span><span><i class="dot-2026"></i>2026 analysis</span><small>Catalog availability, not image detections</small></div></article>
+        <article class="analytics-card"><div class="analytics-card-head"><div><span class="chart-badge">02</span><div><h3>Catalog triage</h3><p>Priority selected for attempted workflow</p></div></div><span class="analytics-unit">1,316 TOTAL</span></div><div class="donut-wrap"><canvas id="triage-chart" role="img" aria-label="Doughnut chart showing priority-selected and remaining scene catalog records"></canvas><div class="donut-center"><strong>96</strong><span>SELECTED</span></div></div><div class="triage-key"><span><i class="dot-selected"></i><b>96</b> priority-selected</span><span><i class="dot-remaining"></i><b>1,220</b> other catalog records</span></div><p class="small-caveat">Selected does not mean processed. Reserve-wide image analysis remains incomplete.</p></article>
+      </div>
     </section>
+    <section class="dashboard-next"><div><span class="heading-kicker">TRANSPARENT MONITORING</span><h2>Follow the method. Inspect the files.</h2><p>See processing decisions, thresholds, limitations, and the complete scene register.</p></div><div><a class="button button-gold" href="methodology.html">Methodology <span>→</span></a><a class="button button-outline" href="downloads.html">Open data library <span>↗</span></a></div></section>
   </main>
-  <footer class="site-footer"><a class="brand brand-footer" href="index.html"><span class="brand-mark">R</span><span class="brand-copy"><strong>RFO<span>WATCH</span></strong><small>OKAPI WILDLIFE RESERVE</small></span></a><p>Satellite screening dashboard · Ituri Province, DRC</p><div><a href="methodology.html">Methodology</a><a href="downloads.html">Downloads</a><a href="https://github.com/KIVUHUB-DRC/Mining-RFO" rel="noopener">Source repository ↗</a></div><small class="footer-note">Assessment incomplete. No mining sites confirmed. Map © OpenStreetMap contributors.</small></footer>
+  <footer class="site-footer"><a class="brand brand-footer" href="index.html"><span class="brand-mark">R</span><span class="brand-copy"><strong>RFO<span>WATCH</span></strong><small>OKAPI WILDLIFE RESERVE</small></span></a><p>Independent satellite screening · Ituri Province, DRC</p><div><a href="methodology.html">Methodology</a><a href="downloads.html">Data library</a><a href="https://github.com/KIVUHUB-DRC/Mining-RFO" rel="noopener">Source repository ↗</a></div><small class="footer-note">Assessment incomplete. No mining sites confirmed. Basemap © OpenStreetMap contributors · CARTO.</small></footer>
 </body>
 </html>

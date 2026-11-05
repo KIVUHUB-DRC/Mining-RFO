@@ -13,6 +13,7 @@
     { year: 2026, quarter: "Q3", catalogRecords: 144, selectedForScreening: 12, tiles: 6, firstDate: "2026-07-02", lastDate: "2026-08-29", meanSceneCloudPct: 56.5 },
     { year: 2026, quarter: "Q4", catalogRecords: 144, selectedForScreening: 12, tiles: 6, firstDate: "2026-09-01", lastDate: "2026-10-30", meanSceneCloudPct: 61.4 }
   ];
+  let sceneChart = null;
 
   const menuButton = document.querySelector(".menu-toggle");
   const nav = document.querySelector(".primary-nav");
@@ -34,55 +35,94 @@
   initializeDownloads();
 
   async function initializeMap() {
-    const caption = document.getElementById("map-caption");
+    const caption = document.getElementById("map-caption-text") || document.getElementById("map-caption");
     const periodFilter = document.getElementById("period-filter");
+    const yearFilter = document.getElementById("year-filter");
     const mapPeriodLabel = document.getElementById("map-period-label");
     if (!window.L) {
-      caption.textContent = "The map library did not load. The boundary GeoJSON remains available from Data & downloads.";
+      if (caption) caption.textContent = "The map library did not load. The boundary GeoJSON remains available from Data & downloads.";
       return;
     }
 
     const map = L.map(mapElement, { zoomControl: false, scrollWheelZoom: false, preferCanvas: true }).setView([1.72, 28.53], 9);
     L.control.zoom({ position: "topright" }).addTo(map);
-    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png", {
+      subdomains: "abcd",
       maxZoom: 18,
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
     }).addTo(map);
 
+    let boundaryLayer = null;
     try {
       const response = await fetch(assetUrl("RFO.json"));
       if (!response.ok) throw new Error(`Boundary request returned ${response.status}`);
       const boundary = await response.json();
-      const outline = L.geoJSON(boundary, {
-        style: { color: "#b28a42", weight: 2.4, opacity: 0.96, fillColor: "#547252", fillOpacity: 0.17 },
+      boundaryLayer = L.geoJSON(boundary, {
+        style: { color: "#9b783d", weight: 2.2, opacity: 0.97, fillColor: "#607c63", fillOpacity: 0.13 },
         onEachFeature: (_feature, layer) => layer.bindPopup(
-          "<b>Okapi Wildlife Reserve</b><br>Source boundary · GeoJSON WGS84<br>Area: 1,393,822 ha (UTM 35N)"
+          "<b>Okapi Wildlife Reserve</b><br>Source boundary · GeoJSON WGS84<br>Area: 1,393,822 ha (UTM 35N)<br><i>Mining screening incomplete</i>"
         )
       }).addTo(map);
-      map.fitBounds(outline.getBounds(), { padding: [25, 25] });
-      L.control.layers(null, { "RFO reserve boundary": outline }, { position: "topright", collapsed: true }).addTo(map);
+      map.fitBounds(boundaryLayer.getBounds(), { padding: [30, 30] });
     } catch (error) {
       console.error("Could not load the RFO boundary:", error);
-      caption.textContent = "The reserve boundary could not be loaded. Check network access; the source GeoJSON is available under Data & downloads.";
+      if (caption) caption.textContent = "The reserve boundary could not be loaded. Check network access; the source GeoJSON is available under Data & downloads.";
     }
 
-    periodFilter?.addEventListener("change", () => {
-      const period = periodFilter.value;
-      const records = sceneData.filter((row) => period === "all" || row.quarter === period);
-      const catalogTotal = records.reduce((sum, row) => sum + row.catalogRecords, 0);
-      const label = period === "all" ? "ALL PERIODS" : `${period} · ${catalogTotal} CATALOG RECORDS`;
-      mapPeriodLabel.textContent = `BOUNDARY VIEW · ${label}`;
-      caption.textContent = period === "all"
-        ? "The map displays the supplied RFO boundary only. No site locations are shown because a complete, verified detection layer is unavailable."
-        : `${period} selected: ${catalogTotal} Sentinel-2 catalog records matched across 2025 and 2026. This is imagery availability—not mining detections. No candidate layer is available.`;
+    document.getElementById("boundary-toggle")?.addEventListener("change", (event) => {
+      if (!boundaryLayer) return;
+      if (event.currentTarget.checked) boundaryLayer.addTo(map);
+      else map.removeLayer(boundaryLayer);
     });
+
+    map.on("mousemove", (event) => {
+      const coordinates = document.getElementById("map-coordinates");
+      if (coordinates) coordinates.textContent = `${event.latlng.lat.toFixed(5)}° N  /  ${event.latlng.lng.toFixed(5)}° E`;
+    });
+    map.on("mouseout", () => {
+      const coordinates = document.getElementById("map-coordinates");
+      if (coordinates) coordinates.textContent = "Move over map for coordinates";
+    });
+
+    const updatePeriod = () => {
+      const period = periodFilter?.value || "all";
+      const year = yearFilter?.value || "all";
+      const records = sceneData.filter((row) =>
+        (period === "all" || row.quarter === period) &&
+        (year === "all" || String(row.year) === year)
+      );
+      const catalogTotal = records.reduce((sum, row) => sum + row.catalogRecords, 0);
+      const chosenPeriod = period === "all" ? "ALL PERIODS" : period;
+      const chosenYear = year === "all" ? "2025 + 2026" : year;
+      if (mapPeriodLabel) mapPeriodLabel.textContent = `${chosenYear} · ${chosenPeriod} · ${catalogTotal} CATALOG RECORDS`;
+      if (caption) {
+        caption.textContent = period === "all" && year === "all"
+          ? "Boundary shown. No mining detections are available from this incomplete assessment."
+          : `${chosenYear} / ${chosenPeriod}: ${catalogTotal} Sentinel-2 records matched. This is imagery availability—not mining detections.`;
+      }
+      if (sceneChart) {
+        const periods = ["Q1", "Q2", "Q3", "Q4"];
+        sceneChart.data.datasets[0].data = periods.map((q) =>
+          sceneData.find((row) => row.year === 2025 && row.quarter === q && (period === "all" || q === period))?.catalogRecords ?? 0
+        );
+        sceneChart.data.datasets[1].data = periods.map((q) =>
+          sceneData.find((row) => row.year === 2026 && row.quarter === q && (period === "all" || q === period))?.catalogRecords ?? 0
+        );
+        sceneChart.data.datasets[0].hidden = year === "2026";
+        sceneChart.data.datasets[1].hidden = year === "2025";
+        sceneChart.update();
+      }
+    };
+    periodFilter?.addEventListener("change", updatePeriod);
+    yearFilter?.addEventListener("change", updatePeriod);
+    updatePeriod();
   }
 
   function initializeCharts() {
     if (!window.Chart) return;
     const sceneCanvas = document.getElementById("scene-chart");
     if (sceneCanvas) {
-      new Chart(sceneCanvas, {
+      sceneChart = new Chart(sceneCanvas, {
         type: "bar",
         data: {
           labels: ["Q1 · Jan–Mar", "Q2 · Apr–Jun", "Q3 · Jul–Aug", "Q4 · Sep–Oct"],
