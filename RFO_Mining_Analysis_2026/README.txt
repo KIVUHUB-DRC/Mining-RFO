@@ -7,7 +7,7 @@ not evidence that mining is absent. No sites are confirmed. See
 PROCESSING_STATUS.txt and intermediate/run.log.
 
 ORGANIZED CONTENTS
-  RFO_Mining_Analysis_2026.gpkg  Spatial database (GeoPackage)
+  RFO_2026.gpkg                  Spatial database (GeoPackage)
   gis/                           Candidate layers and status rasters
   maps/                          Maps, clearly marked not analyzed
   reports/                       DOCX assessment

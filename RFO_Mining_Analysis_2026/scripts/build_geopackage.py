@@ -13,7 +13,7 @@ import pyogrio
 
 ROOT = Path(__file__).resolve().parents[2]
 ANALYSIS = Path(__file__).resolve().parents[1]
-DATABASE = ANALYSIS / "RFO_Mining_Analysis_2026.gpkg"
+DATABASE = ANALYSIS / "RFO_2026.gpkg"
 CRS = "EPSG:4326"
 
 
