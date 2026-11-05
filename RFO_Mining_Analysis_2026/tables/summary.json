@@ -19,7 +19,7 @@
   "earth_engine_status": "Not authenticated; public STAC imagery was used for the attempted optical pass.",
   "patrol_posts": "No authoritative reference layer supplied.",
   "processing_resolution_m": 20,
-  "scene_register": "intermediate/sentinel2_scene_register.csv",
+  "scene_register": "intermediate/scenes.csv",
   "processing_attempt_log": "intermediate/run.log",
-  "generated_utc": "2026-11-05T07:36:31.684167+00:00"
+  "generated_utc": "2026-11-05T07:44:45.850440+00:00"
 }

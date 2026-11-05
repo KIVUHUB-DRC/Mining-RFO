@@ -13,7 +13,7 @@ import pyogrio
 
 ROOT = Path(__file__).resolve().parents[2]
 ANALYSIS = Path(__file__).resolve().parents[1]
-DATABASE = ANALYSIS / "RFO_2026.gpkg"
+DATABASE = ANALYSIS / "rfo26.gpkg"
 CRS = "EPSG:4326"
 
 
@@ -52,14 +52,14 @@ def main() -> None:
     boundary["analysis_status"] = "reference boundary; source geometry preserved"
     boundary["area_ha_utm35"] = boundary.to_crs("EPSG:32635").area / 10000
 
-    sites_path = ANALYSIS / "gis" / "RFO_Mining_Sites_2026.geojson"
+    sites_path = ANALYSIS / "gis" / "sites.geojson"
     sites = gpd.read_file(sites_path)
     if sites.crs is None:
         sites = sites.set_crs(CRS)
     else:
         sites = sites.to_crs(CRS)
     expected_status = "incomplete"
-    summary_path = ANALYSIS / "tables" / "analysis_summary.json"
+    summary_path = ANALYSIS / "tables" / "summary.json"
     with summary_path.open(encoding="utf-8") as source:
         summary = json.load(source)
     if summary.get("analysis_status") != expected_status:
@@ -92,21 +92,21 @@ def main() -> None:
         },
     )
 
-    scene_register = read_table(ANALYSIS / "intermediate" / "sentinel2_scene_register.csv")
-    quarters = read_table(ANALYSIS / "tables" / "quarterly_statistics.csv")
-    inventory = read_table(ANALYSIS / "tables" / "RFO_Mining_Inventory_2026.csv")
+    scene_register = read_table(ANALYSIS / "intermediate" / "scenes.csv")
+    quarters = read_table(ANALYSIS / "tables" / "quarters.csv")
+    inventory = read_table(ANALYSIS / "tables" / "inventory.csv")
     try:
-        workbook = pd.ExcelFile(ANALYSIS / "tables" / "RFO_Mining_Statistics_2026.xlsx")
+        workbook = pd.ExcelFile(ANALYSIS / "tables" / "stats.xlsx")
         sources = pd.read_excel(workbook, sheet_name="Data Sources")
     except (FileNotFoundError, ValueError):
         sources = pd.DataFrame(columns=["dataset", "status", "source_url"])
 
     outputs = [
-        ("report", "reports/RFO_Mining_Activity_Assessment_2026.docx", "assessment report; incomplete"),
-        ("change_raster", "gis/RFO_Mining_Change_Detection_2026.tif", "all NoData; not computed"),
-        ("disturbance_raster", "gis/RFO_Mining_Disturbance_2026.tif", "all NoData; not computed"),
-        ("site_geojson", "gis/RFO_Mining_Sites_2026.geojson", "empty; not evidence of no mining"),
-        ("site_shapefile", "gis/RFO_Mining_Sites_2026.shp", "empty; not evidence of no mining"),
+        ("report", "reports/assessment.docx", "assessment report; incomplete"),
+        ("change_raster", "gis/change.tif", "all NoData; not computed"),
+        ("disturbance_raster", "gis/disturbance.tif", "all NoData; not computed"),
+        ("site_geojson", "gis/sites.geojson", "empty; not evidence of no mining"),
+        ("site_shapefile", "gis/sites.shp", "empty; not evidence of no mining"),
     ]
     status_table = pd.DataFrame(
         [
@@ -127,9 +127,9 @@ def main() -> None:
     first_table = True
     for frame, layer in (
         (status_table, "analysis_status"),
-        (quarters, "quarterly_statistics"),
+        (quarters, "quarters"),
         (inventory, "candidate_inventory"),
-        (scene_register, "sentinel2_scene_register"),
+        (scene_register, "scenes"),
         (sources, "data_sources"),
         (pd.DataFrame(outputs, columns=["output_type", "relative_path", "status"]), "deliverables"),
     ):

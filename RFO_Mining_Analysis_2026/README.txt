@@ -3,11 +3,10 @@ RFO MINING ANALYSIS — 2026
 ASSESSMENT STATUS
 INCOMPLETE — reserve-wide pixel processing was terminated before completion.
 The empty site layers and NoData rasters are placeholders, not zero findings and
-not evidence that mining is absent. No sites are confirmed. See
-PROCESSING_STATUS.txt and intermediate/run.log.
+not evidence that mining is absent. No sites are confirmed. See STATUS.txt and intermediate/run.log.
 
 ORGANIZED CONTENTS
-  RFO_2026.gpkg                  Spatial database (GeoPackage)
+  rfo26.gpkg                     Spatial database (GeoPackage)
   gis/                           Candidate layers and status rasters
   maps/                          Maps, clearly marked not analyzed
   reports/                       DOCX assessment
@@ -18,16 +17,15 @@ ORGANIZED CONTENTS
 
 DATABASE
 The GeoPackage contains rfo_boundary, potential_mining_sites, analysis_status,
-quarterly_statistics, candidate_inventory, sentinel2_scene_register,
-data_sources, and deliverables layers. The boundary geometry comes from RFO.json
+quarters, candidate_inventory, scenes, data_sources, and deliverables layers. The boundary geometry comes from RFO.json
 without geometry edits and is stored in EPSG:4326. Candidate and quarterly
 results are explicitly marked incomplete. Raster files remain separate in gis/.
 Rebuild the database from the organized exports with:
-  python RFO_Mining_Analysis_2026/scripts/build_geopackage.py
+  python RFO_Mining_Analysis_2026/scripts/build_db.py
 
 PROCESSING
 Run the raster workflow from the repository root with:
-  python RFO_Mining_Analysis_2026/scripts/analyze_rfo_mining_2026.py
+  python RFO_Mining_Analysis_2026/scripts/analyze.py
 
 Dependencies are listed in scripts/requirements.txt. A working network
 connection is required. The source boundary uses GeoJSON's default EPSG:4326;

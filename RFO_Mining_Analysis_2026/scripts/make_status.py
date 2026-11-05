@@ -24,7 +24,7 @@ from rasterio.windows import Window
 from shapely.ops import transform as transform_geometry
 from pyproj import Transformer
 
-from analyze_rfo_mining_2026 import load_boundary, write_empty_shapefile
+from analyze import load_boundary, write_empty_shapefile
 
 
 OUT = Path(__file__).resolve().parents[1]
@@ -70,7 +70,7 @@ def main() -> None:
         "BIGTIFF": "IF_SAFER",
     }
 
-    disturbance_path = GIS / "RFO_Mining_Disturbance_2026.tif"
+    disturbance_path = GIS / "disturbance.tif"
     with rasterio.open(
         disturbance_path,
         "w",
@@ -92,7 +92,7 @@ def main() -> None:
 
     index_names = ("NDVI", "EVI", "NBR", "NDMI", "BSI", "MNDWI")
     bands = index_names + ("Q1_BSI_delta", "Q2_BSI_delta", "Q3_BSI_delta", "Q4_BSI_delta")
-    change_path = GIS / "RFO_Mining_Change_Detection_2026.tif"
+    change_path = GIS / "change.tif"
     with rasterio.open(
         change_path,
         "w",
@@ -113,9 +113,9 @@ def main() -> None:
                         window=Window(left, top, w, h),
                     )
 
-    inventory = TABLES / "RFO_Mining_Inventory_2026.csv"
+    inventory = TABLES / "inventory.csv"
     pd.DataFrame(columns=INVENTORY_COLUMNS).to_csv(inventory, index=False)
-    (GIS / "RFO_Mining_Sites_2026.geojson").write_text(
+    (GIS / "sites.geojson").write_text(
         json.dumps(
             {
                 "type": "FeatureCollection",
@@ -127,9 +127,9 @@ def main() -> None:
         ),
         encoding="utf-8",
     )
-    write_empty_shapefile(GIS / "RFO_Mining_Sites_2026.shp")
+    write_empty_shapefile(GIS / "sites.shp")
 
-    scene_path = INTERMEDIATE / "sentinel2_scene_register.csv"
+    scene_path = INTERMEDIATE / "scenes.csv"
     scene_register = pd.read_csv(scene_path) if scene_path.exists() else pd.DataFrame()
     quarter_rows = [
         {
@@ -140,11 +140,11 @@ def main() -> None:
         }
         for quarter in ("Q1", "Q2", "Q3", "Q4")
     ]
-    pd.DataFrame(quarter_rows).to_csv(TABLES / "quarterly_statistics.csv", index=False)
+    pd.DataFrame(quarter_rows).to_csv(TABLES / "quarters.csv", index=False)
 
     data_sources = pd.DataFrame(
         [
-            ["Sentinel-2 L2A", "Catalog and sample pixels accessible; full AOI processing incomplete", "10 m visible/NIR; 20 m SWIR/SCL", "2015–present", "Selected scene list in intermediate/sentinel2_scene_register.csv", "https://planetarycomputer.microsoft.com/api/stac/v1/collections/sentinel-2-l2a"],
+            ["Sentinel-2 L2A", "Catalog and sample pixels accessible; full AOI processing incomplete", "10 m visible/NIR; 20 m SWIR/SCL", "2015–present", "Selected scene list in intermediate/scenes.csv", "https://planetarycomputer.microsoft.com/api/stac/v1/collections/sentinel-2-l2a"],
             ["Landsat 8/9 C2 L2", "Catalog queried; not processed", "30 m multispectral", "1982–present", "No change analysis", "https://planetarycomputer.microsoft.com/api/stac/v1/collections/landsat-c2-l2"],
             ["Sentinel-1 GRD", "Catalog queried; not processed", "10 m class; VV/VH GRD", "2014–present", "No radar processing", "https://planetarycomputer.microsoft.com/api/stac/v1/collections/sentinel-1-grd"],
             ["Planet NICFI", "Not accessed", "4.77 m mosaics", "Access/licensing dependent", "No credentials or account access checked", "https://www.planet.com/nicfi/"],
@@ -173,20 +173,20 @@ def main() -> None:
         "earth_engine_status": "Not authenticated; public STAC imagery was used for the attempted optical pass.",
         "patrol_posts": "No authoritative reference layer supplied.",
         "processing_resolution_m": RESOLUTION,
-        "scene_register": "intermediate/sentinel2_scene_register.csv",
+        "scene_register": "intermediate/scenes.csv",
         "processing_attempt_log": "intermediate/run.log",
         "generated_utc": datetime.now(timezone.utc).isoformat(),
     }
-    (TABLES / "analysis_summary.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+    (TABLES / "summary.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
 
     maps = []
     boundary_map = gpd.GeoDataFrame(geometry=[geometry], crs="EPSG:4326").to_crs(CRS_METRIC)
     map_specs = [
-        ("Overall_RFO_Mining_Activity_Map.png", "Overall activity"),
-        ("Mining_Locations_by_Quarter_Map.png", "Quarterly locations"),
-        ("New_Mining_Locations_2026_Map.png", "New locations"),
-        ("Mining_Expansion_Map.png", "Expansion"),
-        ("Mining_River_and_Patrol_Proximity_Map.png", "River and patrol proximity"),
+        ("activity.png", "Overall activity"),
+        ("quarters.png", "Quarterly locations"),
+        ("new_sites.png", "New locations"),
+        ("expansion.png", "Expansion"),
+        ("proximity.png", "River and patrol proximity"),
     ]
     for filename, title in map_specs:
         fig, ax = plt.subplots(figsize=(9, 8))
@@ -212,7 +212,7 @@ def main() -> None:
         plt.close(fig)
         maps.append(path)
 
-    workbook = TABLES / "RFO_Mining_Statistics_2026.xlsx"
+    workbook = TABLES / "stats.xlsx"
     with pd.ExcelWriter(workbook, engine="openpyxl") as writer:
         pd.DataFrame([manifest]).to_excel(writer, sheet_name="Status", index=False)
         pd.DataFrame(quarter_rows).to_excel(writer, sheet_name="Quarterly", index=False)
@@ -263,17 +263,16 @@ def main() -> None:
         "Global Forest Watch https://www.globalforestwatch.org/ ; NASA FIRMS "
         "https://firms.modaps.eosdis.nasa.gov/ ."
     )
-    report.save(REPORTS / "RFO_Mining_Activity_Assessment_2026.docx")
+    report.save(REPORTS / "assessment.docx")
 
-    (OUT / "PROCESSING_STATUS.txt").write_text(
+    (OUT / "STATUS.txt").write_text(
         STATUS
         + "\n"
         + "Sentinel-2 catalog and sample pixels were accessible. Full-reserve processing was "
         "terminated before completion by the execution environment.\n"
         + "All empty site outputs and NoData rasters are status placeholders, not zero findings. "
         + "Do not use them as evidence that no mining occurred.\n"
-        + "See intermediate/run.log, intermediate/sentinel2_scene_register.csv, and "
-        + "analyze_rfo_mining_2026.py.\n",
+        + "See intermediate/run.log, intermediate/scenes.csv, and scripts/analyze.py.\n",
         encoding="utf-8",
     )
 

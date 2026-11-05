@@ -296,7 +296,7 @@ def calculate_indices(reflectance: dict[str, np.ndarray]) -> dict[str, np.ndarra
 
 
 def save_scene_register(rows: list[dict]) -> None:
-    pd.DataFrame(rows).to_csv(INTERMEDIATE / "sentinel2_scene_register.csv", index=False)
+    pd.DataFrame(rows).to_csv(INTERMEDIATE / "scenes.csv", index=False)
 
 
 def try_osm_rivers(boundary_wgs, transformer) -> tuple[list, str]:
@@ -359,19 +359,19 @@ def make_maps(boundary_utm, sites_utm, rivers, patrol_available: bool) -> list[P
         geometry=[line for _, line in rivers], crs="EPSG:32635"
     )
     specs = [
-        ("Overall_RFO_Mining_Activity_Map.png", "Overall spectral-change screening"),
-        ("Mining_Locations_by_Quarter_Map.png", "Unverified spectral anomalies by quarter"),
-        ("New_Mining_Locations_2026_Map.png", "New 2026 spectral anomalies (not confirmed mines)"),
-        ("Mining_Expansion_Map.png", "Expansion assessment: no historical mine inventory supplied"),
-        ("Mining_River_and_Patrol_Proximity_Map.png", "Proximity to mapped rivers; patrol data unavailable"),
+        ("activity.png", "Overall spectral-change screening"),
+        ("quarters.png", "Unverified spectral anomalies by quarter"),
+        ("new_sites.png", "New 2026 spectral anomalies (not confirmed mines)"),
+        ("expansion.png", "Expansion assessment: no historical mine inventory supplied"),
+        ("proximity.png", "Proximity to mapped rivers; patrol data unavailable"),
     ]
     output_paths = []
     for filename, title in specs:
         fig, ax = plt.subplots(figsize=(10, 9))
         boundary_frame.boundary.plot(ax=ax, color="#263238", linewidth=0.8)
-        if filename == "Mining_River_and_Patrol_Proximity_Map.png" and not river_frame.empty:
+        if filename == "proximity.png" and not river_frame.empty:
             river_frame.plot(ax=ax, color="#2196f3", linewidth=0.35, alpha=0.8)
-        if not sites_utm.empty and filename != "Mining_Expansion_Map.png":
+        if not sites_utm.empty and filename != "expansion.png":
             colors = [
                 {"Q1": "#8e44ad", "Q2": "#e67e22", "Q3": "#27ae60", "Q4": "#c0392b"}.get(
                     str(periods).split(";")[0], "#d62728"
@@ -387,7 +387,7 @@ def make_maps(boundary_utm, sites_utm, rivers, patrol_available: bool) -> list[P
             if sites_utm.empty
             else f"{len(sites_utm)} unverified spectral-change candidate(s); not confirmed mining."
         )
-        if filename in ("Mining_Expansion_Map.png", "Mining_River_and_Patrol_Proximity_Map.png"):
+        if filename in ("expansion.png", "proximity.png"):
             note += "\nNo reference mining inventory or authoritative patrol-post layer was supplied."
         ax.set_title(f"{title}\n{note}", fontsize=11)
         ax.set_xlabel("UTM Zone 35N Easting (m)")
@@ -622,7 +622,7 @@ def build_report(
         "https://firms.modaps.eosdis.nasa.gov/ ; OpenStreetMap/Overpass "
         "https://overpass-api.de/ ."
     )
-    path = REPORTS / "RFO_Mining_Activity_Assessment_2026.docx"
+    path = REPORTS / "assessment.docx"
     report.save(path)
     return path
 
@@ -714,7 +714,7 @@ def main() -> None:
     valid_seen = np.zeros((height, width), dtype=np.uint8)
     event_records: list[dict] = []
     period_stats: list[dict] = []
-    change_path = GIS / "RFO_Mining_Change_Detection_2026.tif"
+    change_path = GIS / "change.tif"
     change_band_count = len(INDEX_NAMES) + len(PERIODS)
     change_profile = {
         **template,
@@ -859,7 +859,7 @@ def main() -> None:
             selected_pixels = (flags[q_index] > 0) & (disturbance == 0)
             disturbance[selected_pixels] = q_index + 1
         disturbance[(hit_count > 1) & inside] = 5
-    disturbance_path = GIS / "RFO_Mining_Disturbance_2026.tif"
+    disturbance_path = GIS / "disturbance.tif"
     disturbance_profile = {**template, "count": 1, "dtype": "uint8", "nodata": NODATA_CLASS}
     with rasterio.open(disturbance_path, "w", **disturbance_profile) as target:
         target.set_band_description(
@@ -947,7 +947,7 @@ def main() -> None:
         )
         sites = sites_utm.to_crs("EPSG:4326")
 
-    inventory_csv = TABLES / "RFO_Mining_Inventory_2026.csv"
+    inventory_csv = TABLES / "inventory.csv"
     inventory_columns = [
         "site_id", "latitude", "longitude", "area_ha", "periods", "first_period",
         "activity", "disturbance_type", "confidence", "dist_bnd_km", "river_km", "patrol_km",
@@ -956,12 +956,12 @@ def main() -> None:
     pd.DataFrame(sites.drop(columns="geometry", errors="ignore"), columns=inventory_columns).to_csv(
         inventory_csv, index=False
     )
-    geojson_path = GIS / "RFO_Mining_Sites_2026.geojson"
+    geojson_path = GIS / "sites.geojson"
     if sites.empty:
         geojson_path.write_text(
             json.dumps({"type": "FeatureCollection", "features": []}), encoding="utf-8"
         )
-        write_empty_shapefile(GIS / "RFO_Mining_Sites_2026.shp")
+        write_empty_shapefile(GIS / "sites.shp")
     else:
         sites.to_file(geojson_path, driver="GeoJSON")
         shp = sites.rename(
@@ -986,10 +986,10 @@ def main() -> None:
                 "dmndwi": "dmndwi",
             }
         )
-        shp.to_file(GIS / "RFO_Mining_Sites_2026.shp", driver="ESRI Shapefile", encoding="UTF-8")
+        shp.to_file(GIS / "sites.shp", driver="ESRI Shapefile", encoding="UTF-8")
 
     maps = make_maps(boundary_utm, sites_utm, rivers, patrol_available=False)
-    pd.DataFrame(period_stats).to_csv(TABLES / "quarterly_statistics.csv", index=False)
+    pd.DataFrame(period_stats).to_csv(TABLES / "quarters.csv", index=False)
     summary = {
         "analysis_period": ["2026-01-01", "2026-10-31"],
         "baseline_period": ["2025-01-01", "2025-10-31"],
@@ -1008,11 +1008,11 @@ def main() -> None:
         "patrol_posts": "Not supplied; nearest-post distances not calculated.",
         "processing_resolution_m": RESOLUTION,
         "minimum_candidate_patch_ha": MIN_PATCH_HA,
-        "scene_register": "intermediate/sentinel2_scene_register.csv",
+        "scene_register": "intermediate/scenes.csv",
         "generated_utc": datetime.now(timezone.utc).isoformat(),
         "elapsed_seconds": round(time.time() - started, 1),
     }
-    (TABLES / "analysis_summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
+    (TABLES / "summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
     sources = pd.DataFrame(
         [
             ["Sentinel-2 L2A", "Used", "10 m visible/NIR; 20 m SWIR/SCL", "2015–present", "STAC + selected scenes in register", "https://planetarycomputer.microsoft.com/api/stac/v1/collections/sentinel-2-l2a"],
@@ -1027,7 +1027,7 @@ def main() -> None:
         ],
         columns=["dataset", "status", "resolution", "temporal_coverage", "access_or_use_notes", "source_url"],
     )
-    with pd.ExcelWriter(TABLES / "RFO_Mining_Statistics_2026.xlsx", engine="openpyxl") as writer:
+    with pd.ExcelWriter(TABLES / "stats.xlsx", engine="openpyxl") as writer:
         pd.DataFrame([summary]).to_excel(writer, sheet_name="Summary", index=False)
         pd.DataFrame(period_stats).to_excel(writer, sheet_name="Quarterly", index=False)
         pd.DataFrame(sites.drop(columns="geometry", errors="ignore"), columns=inventory_columns).to_excel(
