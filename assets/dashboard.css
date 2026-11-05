@@ -46,9 +46,13 @@
 .map-data-state i{width:6px;height:6px;border-radius:50%;background:#c29b55}
 .map-heading-right>a{font-size:9px;font-weight:700;color:#526c58}
 .map-heading-right>a span{color:#ac874b;margin-left:4px}
-.dashboard-map-grid{display:grid;grid-template-columns:246px minmax(0,1fr);height:clamp(410px,56vw,625px);min-height:410px;border:1px solid #d9e0d8;border-radius:8px;background:#fff;overflow:hidden;box-shadow:0 8px 24px rgba(28,52,37,.055)}
+.dashboard-map-grid{display:grid;grid-template-columns:250px minmax(0,1fr);height:clamp(520px,70vh,780px);min-height:520px;border:1px solid #d9e0d8;border-radius:8px;background:#fff;overflow:hidden;box-shadow:0 8px 24px rgba(28,52,37,.055)}
 .filter-panel{display:flex;flex-direction:column;padding:15px 14px 12px;border-right:1px solid #e1e6df;background:#fbfcfa}
 .filter-panel-top{display:flex;align-items:center;gap:9px;padding-bottom:13px;border-bottom:1px solid #e8ece6}
+.map-action{display:flex;align-items:center;gap:8px;width:100%;margin-top:11px;padding:8px 9px;border:1px solid #dce5da;border-radius:5px;background:#edf3eb;color:#43634a;text-align:left;font:600 9px "DM Sans",sans-serif;cursor:pointer}
+.map-action:hover{background:#e5eee2;border-color:#c8d6c6}
+.map-action:focus-visible{outline:2px solid #bc984d;outline-offset:2px}
+.map-action>b{margin-left:auto;color:#9a7a43}
 .filter-panel-icon{width:29px;height:29px;display:grid;place-items:center;border-radius:7px;background:#e8eee6;color:#4e6d55;font-size:16px}
 .filter-panel-top>div{display:grid;gap:2px}
 .filter-panel-top>div b{font:700 10px "Manrope",sans-serif;color:#354b3a}
@@ -101,6 +105,7 @@
 .map-floating-status>span{font-size:6px;letter-spacing:.1em;color:#87938a}
 .map-floating-status>b{font-size:7px;color:#956d32;letter-spacing:.05em}
 .map-floating-status>b i{display:inline-block;width:5px;height:5px;background:#c5994b;border-radius:50%;margin-right:4px}
+.map-floating-status>small{padding-top:3px;border-top:1px solid #e7ece5;color:#738174;font-size:6px;letter-spacing:.07em}
 .map-coordinates{left:11px;bottom:40px;padding:5px 8px;font:7px ui-monospace,SFMono-Regular,Consolas,monospace;color:#596c5c}
 .map-disclaimer{left:50%;top:50%;transform:translate(-50%,-50%);width:min(310px,78%);display:flex;align-items:flex-start;gap:8px;padding:10px 12px;pointer-events:none;background:rgba(255,250,240,.95);border-color:#eadbbd}
 .map-disclaimer>b{width:16px;height:16px;flex:none;display:grid;place-items:center;border-radius:50%;background:#efdfbf;color:#8e682f;font:700 9px "Manrope",sans-serif}
@@ -186,10 +191,11 @@
   .map-heading-right>a{font-size:7px}
   .dashboard-map-grid{height:auto;min-height:0;grid-template-columns:1fr}
   .filter-panel{order:2;border-right:0;border-top:1px solid #e1e6df;padding:11px}
-  .dashboard-map-wrap{height:380px;min-height:380px}
+  .dashboard-map-wrap{height:clamp(380px,65vh,560px);min-height:380px}
   .filter-panel-top{padding-bottom:8px}
   .filter-panel-top .control-dots{display:none}
   .filter-block{display:inline-grid;width:calc(50% - 5px);vertical-align:top;margin-top:9px;margin-right:5px}
+  .map-action+.filter-block{width:100%;margin-right:0}
   .filter-block+.filter-block{margin-right:0}
   .filter-block select{height:31px;font-size:8px}
   .filter-help{font-size:7px}
@@ -203,6 +209,7 @@
   .map-floating-title>span{font-size:6px}
   .map-floating-status{right:6px;top:6px;padding:5px}
   .map-floating-status>span,.map-floating-status>b{font-size:5px}
+  .map-floating-status>small{font-size:5px}
   .map-disclaimer{width:82%;padding:8px}
   .map-disclaimer>span{font-size:7px}
   .map-bottom-info{left:6px;bottom:6px;gap:5px}

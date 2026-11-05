@@ -7,6 +7,7 @@
   <meta name="description" content="Interactive satellite-screening dashboard for the Okapi Wildlife Reserve, DRC. This 2026 assessment is incomplete; no mining detections are verified.">
   <title>RFO Watch — Forest Monitor</title>
   <link rel="preconnect" href="https://unpkg.com">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
   <link rel="preconnect" href="https://tile.openstreetmap.org">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
   <link rel="stylesheet" href="assets/site.css">
@@ -57,6 +58,15 @@
       <div class="dashboard-map-grid">
         <aside class="filter-panel" aria-label="Map controls and filters">
           <div class="filter-panel-top"><span class="filter-panel-icon">⌖</span><div><b>Map controls</b><small>RFO · EPSG:4326</small></div><span class="control-dots" aria-hidden="true">···</span></div>
+          <button class="map-action" id="zoom-to-boundary" type="button">⌖ <span>Zoom to reserve boundary</span><b aria-hidden="true">↗</b></button>
+          <div class="filter-block">
+            <label for="basemap-select">BASEMAP STYLE</label>
+            <select id="basemap-select" aria-label="Choose a map basemap">
+              <option value="carto">Light map + labels</option>
+              <option value="plain">Light, no labels</option>
+              <option value="osm">Street map</option>
+            </select>
+          </div>
           <div class="filter-block">
             <label for="period-filter">OBSERVATION PERIOD</label>
             <select id="period-filter">
@@ -89,7 +99,7 @@
         <div class="dashboard-map-wrap">
           <div id="rfo-map" aria-label="Interactive Leaflet map of the Okapi Wildlife Reserve boundary"></div>
           <div class="map-floating-title"><i></i><b>OKAPI WILDLIFE RESERVE</b><span>ITURI · DRC</span></div>
-          <div class="map-floating-status"><span>SCREENING STATUS</span><b><i></i> INCOMPLETE</b></div>
+          <div class="map-floating-status"><span>SCREENING STATUS</span><b><i></i> INCOMPLETE</b><small id="map-engine-state">LOADING MAP</small></div>
           <div class="map-coordinates" id="map-coordinates">Move over map for coordinates</div>
           <div class="map-disclaimer"><b>!</b><span id="map-caption-text">Boundary shown. No mining detections are available from this incomplete assessment.</span></div>
           <div class="map-bottom-info"><span id="map-period-label">ALL CATALOG PERIODS</span><i></i><span>SCENE COUNTS ARE NOT SITE COUNTS</span></div>

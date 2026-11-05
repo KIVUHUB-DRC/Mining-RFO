@@ -39,20 +39,74 @@
     const periodFilter = document.getElementById("period-filter");
     const yearFilter = document.getElementById("year-filter");
     const mapPeriodLabel = document.getElementById("map-period-label");
+    const engineState = document.getElementById("map-engine-state");
+    const basemapSelect = document.getElementById("basemap-select");
     if (!window.L) {
-      if (caption) caption.textContent = "The map library did not load. The boundary GeoJSON remains available from Data & downloads.";
-      return;
+      try {
+        await loadLeafletFallback();
+      } catch (error) {
+        console.error("Could not load Leaflet from either CDN:", error);
+        if (engineState) engineState.textContent = "MAP LIBRARY UNAVAILABLE";
+        if (caption) caption.textContent = "The interactive map library could not be loaded. Download the boundary GeoJSON from Data & downloads.";
+        return;
+      }
     }
 
     const map = L.map(mapElement, { zoomControl: false, scrollWheelZoom: false, preferCanvas: true }).setView([1.72, 28.53], 9);
     L.control.zoom({ position: "topright" }).addTo(map);
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png", {
-      subdomains: "abcd",
-      maxZoom: 18,
-      attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
-    }).addTo(map);
+    const basemaps = {
+      carto: L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+        subdomains: "abcd", maxZoom: 19, attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
+      }),
+      plain: L.tileLayer("https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png", {
+        subdomains: "abcd", maxZoom: 19, attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
+      }),
+      osm: L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      })
+    };
+    let activeBasemap = basemaps[basemapSelect?.value || "carto"];
+    let tileErrors = 0;
+    let tileLoads = 0;
+    let switchedToFallback = false;
+    const updateEngineState = (message) => {
+      if (engineState) engineState.textContent = message;
+    };
+    const activateBasemap = (name) => {
+      if (!basemaps[name] || activeBasemap === basemaps[name]) return;
+      map.removeLayer(activeBasemap);
+      activeBasemap = basemaps[name];
+      tileErrors = 0;
+      tileLoads = 0;
+      activeBasemap.addTo(map);
+      updateEngineState("LOADING BASEMAP");
+    };
+    for (const [name, layer] of Object.entries(basemaps)) {
+      layer.on("tileload", () => {
+        if (activeBasemap !== layer) return;
+        tileLoads += 1;
+        updateEngineState("BASEMAP READY");
+      });
+      layer.on("tileerror", () => {
+        if (activeBasemap !== layer) return;
+        tileErrors += 1;
+        if (name !== "osm" && !switchedToFallback && tileErrors >= 3 && tileLoads === 0) {
+          switchedToFallback = true;
+          if (basemapSelect) basemapSelect.value = "osm";
+          activateBasemap("osm");
+        } else if (name === "osm" && tileErrors >= 3 && tileLoads === 0) {
+          updateEngineState("BASEMAP UNAVAILABLE");
+        }
+      });
+    }
+    activeBasemap.addTo(map);
+    basemapSelect?.addEventListener("change", () => {
+      switchedToFallback = basemapSelect.value === "osm";
+      activateBasemap(basemapSelect.value);
+    });
 
     let boundaryLayer = null;
+    let boundaryBounds = null;
     try {
       const response = await fetch(assetUrl("RFO.json"));
       if (!response.ok) throw new Error(`Boundary request returned ${response.status}`);
@@ -63,12 +117,19 @@
           "<b>Okapi Wildlife Reserve</b><br>Source boundary · GeoJSON WGS84<br>Area: 1,393,822 ha (UTM 35N)<br><i>Mining screening incomplete</i>"
         )
       }).addTo(map);
-      map.fitBounds(boundaryLayer.getBounds(), { padding: [30, 30] });
+      boundaryBounds = boundaryLayer.getBounds();
+      if (!boundaryBounds.isValid()) throw new Error("Boundary GeoJSON contains no mappable coordinates");
+      map.fitBounds(boundaryBounds, { padding: [30, 30], maxZoom: 10 });
+      updateEngineState("BOUNDARY LOADED");
     } catch (error) {
       console.error("Could not load the RFO boundary:", error);
-      if (caption) caption.textContent = "The reserve boundary could not be loaded. Check network access; the source GeoJSON is available under Data & downloads.";
+      updateEngineState("BOUNDARY UNAVAILABLE");
+      if (boundaryLayer) map.removeLayer(boundaryLayer);
     }
 
+    document.getElementById("zoom-to-boundary")?.addEventListener("click", () => {
+      if (boundaryBounds?.isValid()) map.fitBounds(boundaryBounds, { padding: [30, 30], maxZoom: 10, animate: true });
+    });
     document.getElementById("boundary-toggle")?.addEventListener("change", (event) => {
       if (!boundaryLayer) return;
       if (event.currentTarget.checked) boundaryLayer.addTo(map);
@@ -82,6 +143,16 @@
     map.on("mouseout", () => {
       const coordinates = document.getElementById("map-coordinates");
       if (coordinates) coordinates.textContent = "Move over map for coordinates";
+    });
+
+    map.whenReady(() => {
+      requestAnimationFrame(() => map.invalidateSize({ pan: false }));
+      if ("ResizeObserver" in window) {
+        const resizeObserver = new ResizeObserver(() => map.invalidateSize({ pan: false }));
+        resizeObserver.observe(mapElement);
+      } else {
+        window.addEventListener("resize", () => map.invalidateSize({ pan: false }));
+      }
     });
 
     const updatePeriod = () => {
@@ -116,6 +187,17 @@
     periodFilter?.addEventListener("change", updatePeriod);
     yearFilter?.addEventListener("change", updatePeriod);
     updatePeriod();
+  }
+
+  function loadLeafletFallback() {
+    return new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = "https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js";
+      script.crossOrigin = "anonymous";
+      script.onload = () => window.L ? resolve() : reject(new Error("Leaflet did not initialize"));
+      script.onerror = () => reject(new Error("Leaflet fallback CDN request failed"));
+      document.head.append(script);
+    });
   }
 
   function initializeCharts() {
