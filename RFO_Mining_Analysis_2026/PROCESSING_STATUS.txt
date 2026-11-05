@@ -1,0 +1,4 @@
+INCOMPLETE — pixel-level screening did not finish for the full reserve.
+Sentinel-2 catalog and sample pixels were accessible. Full-reserve processing was terminated before completion by the execution environment.
+All empty site outputs and NoData rasters are status placeholders, not zero findings. Do not use them as evidence that no mining occurred.
+See intermediate/run.log, intermediate/sentinel2_scene_register.csv, and analyze_rfo_mining_2026.py.

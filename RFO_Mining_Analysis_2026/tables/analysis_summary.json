@@ -1,0 +1,25 @@
+{
+  "analysis_status": "incomplete",
+  "status_message": "INCOMPLETE \u2014 pixel-level screening did not finish for the full reserve.",
+  "boundary_file": "RFO.json",
+  "boundary_geometry": "Polygon",
+  "boundary_crs": "EPSG:4326 (GeoJSON default)",
+  "analysis_crs": "EPSG:32635",
+  "boundary_area_ha": 1393822.3937143083,
+  "boundary_extent_lonlat": [
+    27.985046166000018,
+    0.9648024470000109,
+    29.083703485,
+    2.4784760780000283
+  ],
+  "candidate_site_count": null,
+  "candidate_disturbed_area_ha": null,
+  "confirmed_mining_site_count": null,
+  "interpretation": "No reserve-wide count or area estimate is available; blank/NoData outputs are not zero findings.",
+  "earth_engine_status": "Not authenticated; public STAC imagery was used for the attempted optical pass.",
+  "patrol_posts": "No authoritative reference layer supplied.",
+  "processing_resolution_m": 20,
+  "scene_register": "intermediate/sentinel2_scene_register.csv",
+  "processing_attempt_log": "intermediate/run.log",
+  "generated_utc": "2026-11-05T07:36:31.684167+00:00"
+}

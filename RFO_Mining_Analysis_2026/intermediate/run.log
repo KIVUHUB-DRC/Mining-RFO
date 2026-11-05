@@ -1,0 +1,19 @@
+/workspaces/Mining-RFO/RFO_Mining_Analysis_2026/analyze_rfo_mining_2026.py:643: DeprecationWarning: The 'shapely.ops.transform()' function is deprecated. Use 'shapely.transform()' or 'shapely.transform_coordseq()' instead. See https://shapely.readthedocs.io/en/latest/manual.html#shapely.ops.transform for more details.
+  boundary_utm = transform_geometry(
+Boundary: RFO.json; Polygon; EPSG:4326; area 1,393,822.39 ha in EPSG:32635.
+Catalog 2025 Q1: 153 scenes, 6 tiles, 12 selected.
+Catalog 2025 Q2: 215 scenes, 6 tiles, 12 selected.
+Catalog 2025 Q3: 145 scenes, 6 tiles, 12 selected.
+Catalog 2025 Q4: 146 scenes, 6 tiles, 12 selected.
+Catalog 2026 Q1: 161 scenes, 6 tiles, 12 selected.
+Catalog 2026 Q2: 208 scenes, 6 tiles, 12 selected.
+Catalog 2026 Q3: 144 scenes, 6 tiles, 12 selected.
+Catalog 2026 Q4: 144 scenes, 6 tiles, 12 selected.
+Processed 35NNB Q1: 99.8% joint clear; 0 threshold patches.
+Processed 35NNB Q2: 99.6% joint clear; 0 threshold patches.
+Processed 35NNB Q3: 99.5% joint clear; 0 threshold patches.
+Processed 35NNB Q4: 77.9% joint clear; 0 threshold patches.
+Processed 35NNC Q1: 100.0% joint clear; 0 threshold patches.
+Processed 35NNC Q2: 100.0% joint clear; 0 threshold patches.
+Processed 35NNC Q3: 100.0% joint clear; 0 threshold patches.
+Processed 35NNC Q4: 100.0% joint clear; 0 threshold patches.

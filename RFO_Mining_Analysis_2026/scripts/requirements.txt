@@ -1,0 +1,15 @@
+geopandas
+rasterio
+rioxarray
+shapely
+pandas
+numpy
+matplotlib
+scikit-learn
+earthengine-api
+geemap
+planetary-computer
+requests
+python-docx
+openpyxl
+pyogrio
