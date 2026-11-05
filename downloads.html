@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#102a23">
+  <meta name="description" content="Download RFO 2026 mining-screening data, reserve boundary, imagery scene register, GeoPackage, report and reproducible scripts.">
+  <title>Data &amp; downloads — RFO Watch</title>
+  <link rel="stylesheet" href="assets/site.css">
+  <script defer src="assets/site.js"></script>
+</head>
+<body data-page="downloads">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header"><a class="brand" href="index.html"><span class="brand-mark">R</span><span class="brand-copy"><strong>RFO<span>WATCH</span></strong><small>OKAPI WILDLIFE RESERVE</small></span></a><button class="menu-toggle" aria-expanded="false" aria-controls="primary-nav" aria-label="Open navigation"><span></span><span></span></button><nav class="primary-nav" id="primary-nav" aria-label="Main navigation"><a href="index.html">Overview</a><a href="methodology.html">Methodology</a><a class="active" href="downloads.html">Data &amp; downloads</a><a class="nav-cta" href="index.html#live-map">Explore map <span>↗</span></a></nav></header>
+  <main id="main">
+    <section class="page-hero"><div class="eyebrow eyebrow-dark">OPEN DATA · REPRODUCIBLE FILES</div><h1>Data you can<br><em>inspect and reuse.</em></h1><p>Download the boundary, imagery scene register, screening outputs and processing scripts. Each item is labeled with its actual analysis status.</p><div class="page-meta"><span class="status-pill"><i></i> OUTPUTS MARKED INCOMPLETE</span><span>Format notes included</span></div></section>
+    <section class="status-banner status-banner-page"><div class="status-icon">!</div><div><strong>Important: empty outputs are not zero findings</strong><p>The assessment did not finish reserve-wide processing. Site files are empty and raster files contain NoData placeholders. Download them for workflow inspection only—not as evidence that no mining occurred.</p></div></section>
+    <section class="downloads-wrap section-wrap">
+      <div class="download-toolbar"><div><div class="eyebrow eyebrow-dark">FILE LIBRARY</div><h2>Assessment resources</h2></div><label class="search-box"><span aria-hidden="true">⌕</span><input type="search" id="download-search" placeholder="Search resources…" aria-label="Search downloadable resources"></label></div>
+      <div class="download-filters" role="group" aria-label="Filter resources by type"><button class="filter-chip active" data-download-filter="all">All files</button><button class="filter-chip" data-download-filter="spatial">Spatial data</button><button class="filter-chip" data-download-filter="tables">Tables</button><button class="filter-chip" data-download-filter="reports">Reports</button><button class="filter-chip" data-download-filter="code">Code &amp; metadata</button></div>
+      <div class="download-grid" id="download-grid">
+        <article class="download-card" data-category="spatial" data-search="geopackage rfo boundary scenes database spatial gpkg">
+          <div class="file-icon icon-gpkg">GPKG</div><div class="file-tag">SPATIAL DATABASE</div><h3>RFO analysis GeoPackage</h3><p>Boundary, status tables, catalog scene register and deliverable references. Candidate layer is empty because full processing did not finish.</p><div class="file-meta"><span>GeoPackage</span><span>EPSG:4326</span></div><a class="download-link" href="RFO_Mining_Analysis_2026/rfo26.gpkg" download>Download database <span>↓</span></a>
+        </article>
+        <article class="download-card" data-category="spatial" data-search="boundary rfo geojson polygon reserve">
+          <div class="file-icon icon-geo">GEO</div><div class="file-tag">REFERENCE BOUNDARY</div><h3>RFO reserve boundary</h3><p>Authoritative source geometry as provided. Single Polygon; default GeoJSON coordinates are WGS84.</p><div class="file-meta"><span>GeoJSON</span><span>EPSG:4326</span></div><a class="download-link" href="RFO.json" download>Download boundary <span>↓</span></a>
+        </article>
+        <article class="download-card" data-category="tables" data-search="sentinel satellite scenes stac register imagery csv">
+          <div class="file-icon icon-csv">CSV</div><div class="file-tag">IMAGERY CATALOG</div><h3>Sentinel-2 scene register</h3><p>1,316 STAC scene records across the 2025 baseline and 2026 periods; includes dates, tiles, cloud cover and selection flag.</p><div class="file-meta"><span>CSV</span><span>1,316 records</span></div><a class="download-link" href="RFO_Mining_Analysis_2026/intermediate/scenes.csv" download>Download scene register <span>↓</span></a>
+        </article>
+        <article class="download-card" data-category="tables" data-search="inventory candidates sites mining csv empty incomplete">
+          <div class="file-icon icon-csv">CSV</div><div class="file-tag">CANDIDATE INVENTORY</div><h3>Potential-site inventory</h3><p>Schema is provided; no sites were assessed because the reserve-wide screening did not complete. Not a zero count.</p><div class="file-meta"><span>CSV</span><span>Incomplete</span></div><a class="download-link" href="RFO_Mining_Analysis_2026/tables/inventory.csv" download>Download inventory schema <span>↓</span></a>
+        </article>
+        <article class="download-card" data-category="tables" data-search="statistics excel workbook quarterly summary status data sources">
+          <div class="file-icon icon-xls">XLSX</div><div class="file-tag">STATUS &amp; STATISTICS</div><h3>Assessment workbook</h3><p>Summary, quarterly status, empty inventory schema, scene register and data-source notes.</p><div class="file-meta"><span>Excel workbook</span><span>Incomplete</span></div><a class="download-link" href="RFO_Mining_Analysis_2026/tables/stats.xlsx" download>Download workbook <span>↓</span></a>
+        </article>
+        <article class="download-card" data-category="spatial" data-search="sites shapefile geojson mining empty candidate polygons">
+          <div class="file-icon icon-geo">SHP</div><div class="file-tag">GIS SITE LAYER</div><h3>Site layer (GeoJSON)</h3><p>Empty candidate layer with explicit incomplete status. Use GeoPackage for the complete boundary and metadata.</p><div class="file-meta"><span>GeoJSON</span><span>EPSG:4326</span></div><a class="download-link" href="RFO_Mining_Analysis_2026/gis/sites.geojson" download>Download site layer <span>↓</span></a>
+        </article>
+        <article class="download-card" data-category="spatial" data-search="disturbance raster geotiff nodata not computed">
+          <div class="file-icon icon-raster">TIF</div><div class="file-tag">RASTER PLACEHOLDER</div><h3>Disturbance screening raster</h3><p>All pixels are NoData; the analysis was not computed across the reserve. Do not interpret as zero disturbance.</p><div class="file-meta"><span>GeoTIFF · 20 m grid</span><span>NoData</span></div><a class="download-link" href="RFO_Mining_Analysis_2026/gis/disturbance.tif" download>Download placeholder <span>↓</span></a>
+        </article>
+        <article class="download-card" data-category="spatial" data-search="change detection indices raster geotiff nodata">
+          <div class="file-icon icon-raster">TIF</div><div class="file-tag">RASTER PLACEHOLDER</div><h3>Change-detection raster</h3><p>Index bands are present as a schema; all values are NoData because full-area index processing did not finish.</p><div class="file-meta"><span>GeoTIFF · 20 m grid</span><span>NoData</span></div><a class="download-link" href="RFO_Mining_Analysis_2026/gis/change.tif" download>Download placeholder <span>↓</span></a>
+        </article>
+        <article class="download-card" data-category="reports" data-search="technical assessment report docx methodology limitations">
+          <div class="file-icon icon-doc">DOC</div><div class="file-tag">TECHNICAL REPORT</div><h3>Assessment report</h3><p>Documents inputs, method, incomplete status, caveats, references and next steps for verification.</p><div class="file-meta"><span>Word document</span><span>Assessment status included</span></div><a class="download-link" href="RFO_Mining_Analysis_2026/reports/assessment.docx" download>Download report <span>↓</span></a>
+        </article>
+        <article class="download-card" data-category="code" data-search="python script reproducible analysis requirements code">
+          <div class="file-icon icon-code">PY</div><div class="file-tag">REPRODUCIBLE WORKFLOW</div><h3>Analysis scripts &amp; requirements</h3><p>Python scripts for the seasonal screen, status package generation and GeoPackage creation.</p><div class="file-meta"><span>Python</span><span>Re-run requires network</span></div><a class="download-link" href="https://github.com/KIVUHUB-DRC/Mining-RFO/tree/main/RFO_Mining_Analysis_2026/scripts" rel="noopener">Browse scripts <span>↗</span></a>
+        </article>
+        <article class="download-card" data-category="code" data-search="processing status log provenance json">
+          <div class="file-icon icon-code">TXT</div><div class="file-tag">PROVENANCE</div><h3>Processing status &amp; log</h3><p>Explicit status note and execution log describing where the raster job stopped.</p><div class="file-meta"><span>Text / log</span><span>Run record</span></div><a class="download-link" href="RFO_Mining_Analysis_2026/STATUS.txt" download>Read status <span>↗</span></a>
+        </article>
+      </div>
+      <div class="empty-search" id="empty-search" hidden>No resources match that search. Try another term or choose “All files”.</div>
+      <div class="download-footer-note"><span>i</span><p>All linked files are versioned in the <a href="https://github.com/KIVUHUB-DRC/Mining-RFO/tree/main/RFO_Mining_Analysis_2026" rel="noopener">GitHub repository</a>. Large spatial files may take a moment to download. The GeoPackage includes the boundary and scene register but does not embed raster data.</p></div>
+    </section>
+  </main>
+  <footer class="site-footer"><a class="brand brand-footer" href="index.html"><span class="brand-mark">R</span><span class="brand-copy"><strong>RFO<span>WATCH</span></strong><small>OKAPI WILDLIFE RESERVE</small></span></a><p>Satellite screening dashboard · Ituri Province, DRC</p><div><a href="index.html">Overview</a><a href="methodology.html">Methodology</a><a href="https://github.com/KIVUHUB-DRC/Mining-RFO" rel="noopener">Source repository ↗</a></div><small class="footer-note">Assessment incomplete. No mining sites confirmed. Map © OpenStreetMap contributors.</small></footer>
+</body>
+</html>
