@@ -110,6 +110,26 @@
       <div class="map-footline"><span>BOUNDARY SOURCE <b>RFO.json</b></span><span>AREA <b>1,393,822 ha</b></span><span>AREA CRS <b>UTM 35N · EPSG:32635</b></span><span class="map-footline-right">BASEMAP © OPENSTREETMAP · CARTO</span></div>
     </section>
 
+    <section class="catalog-data" aria-labelledby="catalog-data-title">
+      <div class="catalog-data-heading">
+        <div><span class="heading-kicker">OBSERVATION DATA · NOT MINING DETECTIONS</span><h2 id="catalog-data-title">Satellite imagery catalog</h2><p>Real Sentinel-2 scene records intersecting the reserve. Choose a year and period above to filter this summary.</p></div>
+        <a href="RFO_Mining_Analysis_2026/intermediate/scenes.csv" download>Download full scene register <span>↓</span></a>
+      </div>
+      <div class="catalog-summary" aria-live="polite">
+        <article><span>CATALOG SCENES</span><b id="catalog-total">1,316</b></article>
+        <article><span>PRIORITY SELECTED</span><b id="catalog-selected">96</b></article>
+        <article><span>COVERED TILES</span><b id="catalog-tiles">6 / 6</b></article>
+        <article><span>MEAN SCENE CLOUD</span><b id="catalog-cloud">61.2%</b></article>
+      </div>
+      <div class="catalog-table-wrap">
+        <table class="catalog-table">
+          <caption id="catalog-table-caption">Sentinel-2 Level-2A catalog scenes by year and period. Selection is a processing priority flag, not proof of image processing or mining activity.</caption>
+          <thead><tr><th scope="col">YEAR</th><th scope="col">PERIOD</th><th scope="col">CATALOG SCENES</th><th scope="col">PRIORITY SELECTED</th><th scope="col">MEAN CLOUD</th><th scope="col">CATALOG DATE RANGE</th></tr></thead>
+          <tbody id="catalog-table-body"><tr><td colspan="6">Loading catalog records…</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
     <section class="dashboard-metrics" aria-label="Assessment indicators">
       <article class="dash-metric"><span class="dash-metric-label">RESERVE AREA <i>ⓘ</i></span><b>1.394<span> M ha</span></b><small>Projected from source polygon</small></article>
       <article class="dash-metric"><span class="dash-metric-label">SCENE RECORDS <i>ⓘ</i></span><b>1,316</b><small>2025 baseline + 2026 catalog</small></article>

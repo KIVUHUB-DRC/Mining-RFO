@@ -3,7 +3,7 @@
 
   const siteRoot = new URL(".", window.location.href);
   const assetUrl = (path) => new URL(path, siteRoot).href;
-  const sceneData = [
+  let sceneData = [
     { year: 2025, quarter: "Q1", catalogRecords: 153, selectedForScreening: 12, tiles: 6, firstDate: "2025-01-01", lastDate: "2025-03-30", meanSceneCloudPct: 51.4 },
     { year: 2025, quarter: "Q2", catalogRecords: 215, selectedForScreening: 12, tiles: 6, firstDate: "2025-04-01", lastDate: "2025-06-28", meanSceneCloudPct: 55.4 },
     { year: 2025, quarter: "Q3", catalogRecords: 145, selectedForScreening: 12, tiles: 6, firstDate: "2025-07-03", lastDate: "2025-08-29", meanSceneCloudPct: 72.4 },
@@ -14,6 +14,7 @@
     { year: 2026, quarter: "Q4", catalogRecords: 144, selectedForScreening: 12, tiles: 6, firstDate: "2026-09-01", lastDate: "2026-10-30", meanSceneCloudPct: 61.4 }
   ];
   let sceneChart = null;
+  let coverageDataPromise = null;
 
   const menuButton = document.querySelector(".menu-toggle");
   const nav = document.querySelector(".primary-nav");
@@ -30,9 +31,111 @@
   }));
 
   const mapElement = document.getElementById("rfo-map");
-  if (mapElement) initializeMap();
   initializeCharts();
   initializeDownloads();
+  if (mapElement) {
+    initializeMap();
+    initializeCatalogData();
+  }
+
+  function loadCoverageData() {
+    if (!coverageDataPromise) {
+      coverageDataPromise = fetch(assetUrl("RFO_Mining_Analysis_2026/gis/coverage.geojson"))
+        .then((response) => {
+          if (!response.ok) throw new Error(`Catalog coverage request returned ${response.status}`);
+          return response.json();
+        });
+    }
+    return coverageDataPromise;
+  }
+
+  function aggregateCoverage(features) {
+    const aggregated = new Map();
+    for (const feature of features) {
+      const tile = feature.properties.tile;
+      for (const record of feature.properties.periods) {
+        const key = `${record.year}-${record.period}`;
+        if (!aggregated.has(key)) {
+          aggregated.set(key, {
+            year: record.year,
+            quarter: record.period,
+            catalogRecords: 0,
+            selectedForScreening: 0,
+            cloudTotal: 0,
+            firstDate: record.first_date,
+            lastDate: record.last_date,
+            tileIds: new Set()
+          });
+        }
+        const row = aggregated.get(key);
+        row.catalogRecords += record.count;
+        row.selectedForScreening += record.selected;
+        row.cloudTotal += record.mean_cloud_pct * record.count;
+        row.firstDate = record.first_date < row.firstDate ? record.first_date : row.firstDate;
+        row.lastDate = record.last_date > row.lastDate ? record.last_date : row.lastDate;
+        if (record.count > 0) row.tileIds.add(tile);
+      }
+    }
+    return [...aggregated.values()]
+      .sort((a, b) => a.year - b.year || a.quarter.localeCompare(b.quarter))
+      .map((row) => ({
+        year: row.year,
+        quarter: row.quarter,
+        catalogRecords: row.catalogRecords,
+        selectedForScreening: row.selectedForScreening,
+        tiles: row.tileIds.size,
+        firstDate: row.firstDate,
+        lastDate: row.lastDate,
+        meanSceneCloudPct: row.catalogRecords ? row.cloudTotal / row.catalogRecords : 0
+      }));
+  }
+
+  async function initializeCatalogData() {
+    const yearFilter = document.getElementById("year-filter");
+    const periodFilter = document.getElementById("period-filter");
+    const refresh = () => {
+      const year = yearFilter?.value || "all";
+      const period = periodFilter?.value || "all";
+      const records = sceneData.filter((row) =>
+        (year === "all" || String(row.year) === year) &&
+        (period === "all" || row.quarter === period)
+      );
+      const total = records.reduce((sum, row) => sum + row.catalogRecords, 0);
+      const selected = records.reduce((sum, row) => sum + row.selectedForScreening, 0);
+      const tiles = records.length ? Math.max(...records.map((row) => row.tiles)) : 0;
+      const meanCloud = total
+        ? records.reduce((sum, row) => sum + row.meanSceneCloudPct * row.catalogRecords, 0) / total
+        : 0;
+      renderCatalogData(total, selected, tiles, meanCloud, year, period);
+      if (sceneChart) {
+        const periods = ["Q1", "Q2", "Q3", "Q4"];
+        sceneChart.data.datasets[0].data = periods.map((q) =>
+          period === "all" || q === period
+            ? sceneData.find((row) => row.year === 2025 && row.quarter === q)?.catalogRecords ?? 0
+            : 0
+        );
+        sceneChart.data.datasets[1].data = periods.map((q) =>
+          period === "all" || q === period
+            ? sceneData.find((row) => row.year === 2026 && row.quarter === q)?.catalogRecords ?? 0
+            : 0
+        );
+        sceneChart.data.datasets[0].hidden = year === "2026";
+        sceneChart.data.datasets[1].hidden = year === "2025";
+        sceneChart.update();
+      }
+    };
+    yearFilter?.addEventListener("change", refresh);
+    periodFilter?.addEventListener("change", refresh);
+    try {
+      const coverage = await loadCoverageData();
+      sceneData = aggregateCoverage(coverage.features);
+      refresh();
+    } catch (error) {
+      console.error("Could not load catalog data for the dashboard:", error);
+      const tableBody = document.getElementById("catalog-table-body");
+      if (tableBody) tableBody.innerHTML = '<tr><td colspan="6">Catalog data could not be loaded. Download the scene register from Data &amp; downloads.</td></tr>';
+    }
+  }
 
   async function initializeMap() {
     const caption = document.getElementById("map-caption-text") || document.getElementById("map-caption");
@@ -133,9 +236,7 @@
     }
 
     try {
-      const response = await fetch(assetUrl("RFO_Mining_Analysis_2026/gis/coverage.geojson"));
-      if (!response.ok) throw new Error(`Catalog coverage request returned ${response.status}`);
-      const coverage = await response.json();
+      const coverage = await loadCoverageData();
       coverageLayer = L.geoJSON(coverage, {
         style: (feature) => coverageStyle(feature),
         onEachFeature: (feature, layer) => {
@@ -146,6 +247,7 @@
       });
       if (coverageToggle?.checked !== false) coverageLayer.addTo(map);
       if (boundaryLayer && map.hasLayer(boundaryLayer)) boundaryLayer.bringToFront();
+      sceneData = aggregateCoverage(coverage.features);
       updateEngineState("BOUNDARY + CATALOG DATA");
     } catch (error) {
       console.error("Could not load clipped Sentinel-2 catalog footprints:", error);
@@ -175,12 +277,15 @@
       );
       const count = records.reduce((total, record) => total + record.count, 0);
       const selected = records.reduce((total, record) => total + record.selected, 0);
+      const meanCloud = count
+        ? records.reduce((total, record) => total + record.mean_cloud_pct * record.count, 0) / count
+        : null;
       const dates = records.flatMap((record) => [record.first_date, record.last_date]).sort();
       const periodName = selectedPeriod === "all" ? "all periods" : selectedPeriod;
       const yearName = selectedYear === "all" ? "2025–2026" : selectedYear;
       const sourceRecord = records.at(-1);
       const sourceLabel = sourceRecord ? `${sourceRecord.year} ${sourceRecord.period}` : "catalog";
-      return `<b>Sentinel-2 tile ${escapeHtml(properties.tile)}</b><br>${count} catalog scenes · ${selected} priority-selected<br>${escapeHtml(yearName)} · ${escapeHtml(periodName)}${dates.length ? `<br>Catalog dates: ${escapeHtml(dates[0])} to ${escapeHtml(dates.at(-1))}` : ""}<br><i>Imagery coverage only—not a mining detection.</i>${sourceRecord ? `<br><a href="${escapeHtml(sourceRecord.source_item)}" target="_blank" rel="noopener">Open representative ${escapeHtml(sourceLabel)} STAC scene ↗</a>` : ""}`;
+      return `<b>Sentinel-2 tile ${escapeHtml(properties.tile)}</b><br>${count} catalog scenes · ${selected} priority-selected${meanCloud === null ? "" : `<br>Mean scene cloud cover: ${meanCloud.toFixed(1)}%`}<br>${escapeHtml(yearName)} · ${escapeHtml(periodName)}${dates.length ? `<br>Catalog dates: ${escapeHtml(dates[0])} to ${escapeHtml(dates.at(-1))}` : ""}<br><i>Imagery coverage only—not a mining detection.</i>${sourceRecord ? `<br><a href="${escapeHtml(sourceRecord.source_item)}" target="_blank" rel="noopener">Open representative ${escapeHtml(sourceLabel)} STAC scene ↗</a>` : ""}`;
     }
 
     function escapeHtml(value) {
@@ -250,9 +355,15 @@
         (year === "all" || String(row.year) === year)
       );
       const catalogTotal = records.reduce((sum, row) => sum + row.catalogRecords, 0);
+      const selectedTotal = records.reduce((sum, row) => sum + row.selectedForScreening, 0);
+      const tileTotal = records.length ? Math.max(...records.map((row) => row.tiles)) : 0;
+      const meanCloud = catalogTotal
+        ? records.reduce((sum, row) => sum + row.meanSceneCloudPct * row.catalogRecords, 0) / catalogTotal
+        : 0;
       const chosenPeriod = period === "all" ? "ALL PERIODS" : period;
       const chosenYear = year === "all" ? "2025 + 2026" : year;
       if (mapPeriodLabel) mapPeriodLabel.textContent = `${chosenYear} · ${chosenPeriod} · ${catalogTotal.toLocaleString()} CATALOG RECORDS`;
+      renderCatalogData(catalogTotal, selectedTotal, tileTotal, meanCloud, year, period);
       if (caption) {
         caption.textContent = `${catalogTotal.toLocaleString()} Sentinel-2 catalog records across six reserve-intersecting tile footprints. Imagery coverage only—not mining detections. The reserve-wide assessment is incomplete.`;
       }
@@ -273,6 +384,28 @@
     periodFilter?.addEventListener("change", updatePeriod);
     yearFilter?.addEventListener("change", updatePeriod);
     updatePeriod();
+  }
+
+  function renderCatalogData(total, selected, tiles, meanCloud, year, period) {
+    const values = {
+      "catalog-total": total.toLocaleString(),
+      "catalog-selected": selected.toLocaleString(),
+      "catalog-tiles": `${tiles} / 6`,
+      "catalog-cloud": total ? `${meanCloud.toFixed(1)}%` : "—"
+    };
+    for (const [id, value] of Object.entries(values)) {
+      const element = document.getElementById(id);
+      if (element) element.textContent = value;
+    }
+
+    const tableBody = document.getElementById("catalog-table-body");
+    if (!tableBody) return;
+    const rows = sceneData.map((row) => {
+      const visible = (year === "all" || String(row.year) === year) &&
+        (period === "all" || row.quarter === period);
+      return `<tr${visible ? "" : " hidden"}><td>${row.year}</td><td>${row.quarter}</td><td>${row.catalogRecords.toLocaleString()}</td><td>${row.selectedForScreening.toLocaleString()}</td><td>${row.meanSceneCloudPct.toFixed(1)}%</td><td>${row.firstDate} – ${row.lastDate}</td></tr>`;
+    });
+    tableBody.innerHTML = rows.join("") || '<tr><td colspan="6">No catalog records match this filter.</td></tr>';
   }
 
   function loadLeafletFallback() {

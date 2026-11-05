@@ -48,6 +48,7 @@ def main():
                         "period": period,
                         "count": len(rows),
                         "selected": sum(row["selected"].lower() == "true" for row in rows),
+                        "mean_cloud_pct": round(sum(float(row["cloud_cover_pct"]) for row in rows) / len(rows), 6),
                         "first_date": min(row["date"] for row in rows),
                         "last_date": max(row["date"] for row in rows),
                         "source_item": STAC_ITEMS + representative["scene_id"],
